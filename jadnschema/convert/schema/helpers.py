@@ -125,3 +125,19 @@ def loads(schema: Union[bytes, bytearray, str], fmt: SchemaFormats = SchemaForma
         return cls().loads(schema).parse_schema(**kwargs)
 
     raise ReferenceError(f"The format specified is not a known format - {fmt}")
+
+
+def gen_data(schema: str) -> str:
+    """
+    Generates fake data based on the schema
+
+    Args:
+        schema (str): JSON Schema
+
+    Returns:
+        str: Fake generated data based on the JSON Schema
+    """
+    
+    test = ""
+    
+    return test

@@ -9,6 +9,8 @@ import sys
 from datetime import datetime
 from typing import Any, Callable, Dict, Type, Union
 
+from jadnschema.schema.info import Config
+
 
 def addKey(d: dict, k: str = None) -> Callable:
     """
@@ -40,6 +42,8 @@ def check_values(val: Any) -> Any:
             return safe_cast(val, float, val)
 
     return val
+
+
 
 
 def default_decode(itm: Any, decoders: Dict[Type, Callable[[Any], Any]] = None) -> Any:
@@ -167,6 +171,48 @@ def unixTimeMillis(dt: datetime) -> float:
     """
     epoch = datetime.utcfromtimestamp(0)
     return (dt - epoch).total_seconds() * 1000.0
+
+
+def get_max_len(cls) -> int:
+    config = Config()
+    if cls.__options__.maxv is None:
+        try:
+            maxProps = cls.__config__.info.get('$MaxString')
+        except AttributeError:
+            maxProps = config.MaxElements
+            pass   
+    else:
+        maxProps = cls.__options__.maxv or config.MaxElements
+        
+    return int(maxProps)
+
+
+def get_max_len_binary(cls) -> int:
+    config = Config()
+    if cls.__options__.maxv is None:
+        try:
+            maxProps = cls.__config__.info.get('$MaxBinary')
+        except AttributeError:
+            maxProps = config.MaxElements
+            pass   
+    else:
+        maxProps = cls.__options__.maxv or config.MaxElements
+        
+    return int(maxProps)
+
+
+def get_max_v(cls) -> int:
+    config = Config()
+    if cls.__options__.maxv is None:
+        try:
+            maxProps = cls.__config__.info.get('$MaxElements')
+        except AttributeError:
+            maxProps = config.MaxElements
+            pass   
+    else:
+        maxProps = cls.__options__.maxv or config.MaxElements
+        
+    return int(maxProps)
 
 
 class classproperty(property):

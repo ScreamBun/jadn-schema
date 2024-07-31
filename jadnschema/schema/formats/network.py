@@ -8,6 +8,8 @@ from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from typing import Optional, Union
 from .consts import HOSTNAME_MAX_LENGTH
 from ...utils import addKey
+import base64
+
 __all__ = [
     # All formats
     "NetworkFormats",
@@ -47,18 +49,20 @@ def hostname(val: str) -> str:
 @addKey(d=NetworkFormats, k="ipv4")
 def IPv4(val: str) -> IPv4Address:
     """
+    JSON Schema
     RFC 2673 § 3.2# "dotted-quad"
-    :param val: IPv6 Address to validate
+    :param val: IPv4 Address to validate
     :return: None or Exception
     """
     if not isinstance(val, str):
-        raise TypeError(f"IPv4 given is not expected string, given {type(val)}")
+        raise TypeError(f"IPv4 address given is not expected string, given {type(val)}")
     return IPv4Address(val)
 
 
 @addKey(d=NetworkFormats, k="ipv6")
 def IPv6(val: str) -> IPv6Address:
     """
+    JSON Schema
     RFC 4291 § 2.2 "IPv6 address"
     :param val: IPv6 Address to validate
     :return: None or Exception
@@ -84,24 +88,42 @@ def EUI(val: Union[bytes, str]) -> netaddr.EUI:
 
 # How to validate??
 @addKey(d=NetworkFormats, k="ipv4-addr")
-def IPv4_Address(val: str) -> Optional[Exception]:
+def IPv4_Address(val: str) -> IPv4Address:
     """
     IPv4 address as specified in RFC 791 § 3.1
     :param val: IPv4 Address to validate
     :return: None or Exception
     """
     # Convert val to bytes
+    try:
+        bytes = base64.b64decode(val)
+        val = bytes.decode("utf-8")
+    except Exception as e:
+            raise TypeError(f"{e}")
+ 
+    if not isinstance(val, str):
+        raise TypeError(f"IPv4 address given is not expected string, given {type(val)}")
+    return IPv4Address(val)
 
 
 # How to validate??
 @addKey(d=NetworkFormats, k="ipv6-addr")
-def IPv6_Address(val: str) -> Optional[Exception]:
+def IPv6_Address(val: str) -> IPv6Address:
     """
     IPv6 address as specified in RFC 8200 § 3
-    :param val: IPv4 Address to validate
+    :param val: IPv6 Address to validate
     :return: None or Exception
     """
     # Convert val to bytes
+    try:
+        bytes = base64.b64decode(val)
+        val = bytes.decode("utf-8")
+    except Exception as e:
+            raise TypeError(f"{e}")
+    
+    if not isinstance(val, str):
+        raise TypeError(f"IPv6 address given is not expected string, given {type(val)}")
+    return IPv6Address(val)
 
 
 @addKey(d=NetworkFormats, k="ipv4-net")
@@ -114,12 +136,29 @@ def IPv4_Network(val: Union[list, str, tuple]) -> Union[IPv4Address, IPv4Network
     if not isinstance(val, (list, str, tuple)):
         raise TypeError(f"IPv4 Network is not expected type, given {type(val)}")
 
-    val = val if isinstance(val, (list, tuple)) else val.split("/")
+    #val = val if isinstance(val, (list, tuple)) else val.split("/")
+    if isinstance(val, (list, tuple)):
+        val = val
+    elif '/' in val:
+        val = val.split("/")
+        try:
+            bytes = base64.b64decode(val[0]) #decode
+            bin = bytes.decode("utf-8")
+        except Exception as e:
+            raise TypeError(f"{e}")
+        val = [bin, val[1]]
+    else:
+        try:
+            bytes = base64.b64decode(val) #decode
+            val = [bytes.decode("utf-8")]
+        except Exception as e:
+            raise TypeError(f"{e}")
+    
     if len(val) == 1:
         return IPv4(val[0])
 
     if len(val) != 2:
-        raise ValueError(f"IPv6 Network is not 2 values, given {len(val)}")
+        raise ValueError(f"IPv4 Network is not 2 values, given {len(val)}")
 
     val = "/".join(map(str, val))
     return IPv4Network(val, strict=False)
@@ -135,7 +174,24 @@ def IPv6_Network(val: Union[list, str, tuple]) -> Union[IPv6Address, IPv6Network
     if not isinstance(val, (list, str, tuple)):
         raise TypeError(f"IPv6 Network is not expected type, given {type(val)}")
 
-    val = val if isinstance(val, (list, tuple)) else val.split("/")
+    #val = val if isinstance(val, (list, tuple)) else val.split("/")
+    if isinstance(val, (list, tuple)):
+        val = val
+    elif '/' in val:
+        val = val.split("/")
+        try:
+            bytes = base64.b64decode(val[0]) #decode
+            bin = bytes.decode("utf-8")
+        except Exception as e:
+            raise TypeError(f"{e}")
+        val = [bin, val[1]]
+    else:
+        try:
+            bytes = base64.b64decode(val) #decode
+            val = [bytes.decode("utf-8")]
+        except Exception as e:
+            raise TypeError(f"{e}")
+        
     if len(val) == 1:
         return IPv6(val[0])
 
