@@ -15,7 +15,7 @@ class SchemaFormats(str, EnumBase):
     # JAS = "jas"        #: Convert to [JAS Format]()
     MarkDown = "md"    #: Convert to MarkDown Format
     # Proto = "proto"    #: Convert to [ProtoBuf Format](https://developers.google.com/protocol-buffers/docs/proto3)
-    Relax = "rng"      #: Convert to [RelaxNG Format](https://relaxng.org/spec-20011203.html)
+    # Relax = "rng"      #: Convert to [RelaxNG Format](https://relaxng.org/spec-20011203.html)
     # Thrift = "thrift"  #: Convert to [Thrift Format](https://thrift.apache.org/)
     JSON = "json"        #: Using JADN PyPkg, no logic in JADN Schema 
     PlantUML = "puml"    #: Using JADN PyPkg, no logic in JADN Schema
@@ -35,7 +35,7 @@ class SchemaVisualizationFormats(str, EnumBase):
 
 class SchemaTranslationFormatsForJADN(str, EnumBase):
     """Valid Schema Formats for JADN conversion/translation"""
-    Relax = "rng"      #: Convert to [RelaxNG Format](https://relaxng.org/spec-20011203.html)
+    # Relax = "rng"      #: Convert to [RelaxNG Format](https://relaxng.org/spec-20011203.html)
     JSON = "json"        #: Using JADN PyPkg, no logic in JADN Schema 
     XSD = "xsd"
 
