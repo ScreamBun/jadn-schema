@@ -1,13 +1,17 @@
-from jsonschema import Draft201909Validator
+from jsonschema import Draft201909Validator, ValidationError, SchemaError
 
 def validate_schema(schema: dict)-> tuple[bool, str]:
-    #TODO: validate by draft $schema
+    #TODO: Allow the ability to chose different Draft Validator versions
 
     try:
         Draft201909Validator.check_schema(schema)
         return True, "Schema is Valid"
 
-    except Exception as e:
+    except ValidationError as e:
+        
+        if isinstance(e, SchemaError):
+            raise SchemaError(e.message)
+        
         raise ValueError(e.message)
 
 def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
