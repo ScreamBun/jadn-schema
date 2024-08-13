@@ -42,7 +42,11 @@ class SchemaPackage:
             return
         check(self.schema)
         self.tx = {t[TypeName]: t for t in self.schema['types']}
-        self.deps = build_deps(self.schema)
+        
+        # DK update returns a tuple rather than just a dict, this may change again in JADN 0.7.3
+        deps_and_types = build_deps(self.schema) 
+        self.deps = deps_and_types[0]
+        
         self.refs = defaultdict(lambda: defaultdict(set))
         for tn in self.deps:
             for dn in list(self.deps[tn]):     # Iterate over copy so original can be modified safely
@@ -78,7 +82,7 @@ def merge_tname(tref: str, package: str, namespaces: Dict[str, str], nsids: dict
 
 
 def merge_typedef(tdef: list, package: str, namespaces: Dict[str, str], nsids: dict, sys: str = '$') -> list:
-    oids = [OPTION_ID['ktype'], OPTION_ID['vtype'], OPTION_ID['enum'], OPTION_ID['pointer'], OPTION_ID['and']]  # Options whose value is/has a type name
+    oids = [OPTION_ID['ktype'], OPTION_ID['vtype'], OPTION_ID['enum'], OPTION_ID['pointer']]  # Options whose value is/has a type name
 
     def update_opts(opts: List[str]) -> List[str]:
         return [f'{x[0]}{merge_tname(x[1:], package, namespaces, nsids, sys)}' if x[0] in oids else x for x in opts]
@@ -125,14 +129,14 @@ def add_types(sm: SchemaPackage, tname: str, sys: str = '$') -> NoReturn:
 def resolve(sm: SchemaPackage, types: Set[str], packages: dict, sys: str = '$') -> NoReturn:
     if set(types) - sm.used:
         sm.load()
-    for tn in types:
-        add_types(sm, tn, sys)
-    for pkg in sm.refs:
-        if pkg in packages:
-            print(f'  Resolve {pkg} into {sm.package}')
-            resolve(packages[pkg], {t for k, v in sm.refs[pkg].items() if k in sm.used for t in v}, packages)
-        else:
-            print(f'* Resolve: package {pkg} not found.')
+        for tn in types:
+            add_types(sm, tn, sys)
+        for pkg in sm.refs:
+            if pkg in packages:
+                print(f'  Resolve {pkg} into {sm.package}')
+                resolve(packages[pkg], {t for k, v in sm.refs[pkg].items() if k in sm.used for t in v}, packages)
+            else:
+                print(f'* Resolve: package {pkg} not found.')
 
 
 # Add referenced types to schema. dirname => other schema files
