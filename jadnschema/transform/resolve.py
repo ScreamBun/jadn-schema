@@ -129,14 +129,14 @@ def add_types(sm: SchemaPackage, tname: str, sys: str = '$') -> NoReturn:
 def resolve(sm: SchemaPackage, types: Set[str], packages: dict, sys: str = '$') -> NoReturn:
     if set(types) - sm.used:
         sm.load()
-        for tn in types:
-            add_types(sm, tn, sys)
-        for pkg in sm.refs:
-            if pkg in packages:
-                print(f'  Resolve {pkg} into {sm.package}')
-                resolve(packages[pkg], {t for k, v in sm.refs[pkg].items() if k in sm.used for t in v}, packages)
-            else:
-                print(f'* Resolve: package {pkg} not found.')
+    for tn in types:
+        add_types(sm, tn, sys)
+    for pkg in sm.refs:
+        if pkg in packages:
+            print(f'  Resolve {pkg} into {sm.package}')
+            resolve(packages[pkg], {t for k, v in sm.refs[pkg].items() if k in sm.used for t in v}, packages)
+        else:
+            print(f'* Resolve: package {pkg} not found.')
 
 
 # Add referenced types to schema. dirname => other schema files
