@@ -5,7 +5,7 @@ edn_format==0.7.5
 graphviz==0.20.3
 idna==3.7
 inflect==6.2.0
-jadn==0.7.2
+jadn==0.7.4
 jsonpointer==2.4
 jsonschema==4.23.0
 lxml==4.9.4

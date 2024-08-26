@@ -43,9 +43,11 @@ class SchemaPackage:
         check(self.schema)
         self.tx = {t[TypeName]: t for t in self.schema['types']}
         
-        # DK update returns a tuple rather than just a dict, this may change again in JADN 0.7.3
-        deps_and_types = build_deps(self.schema) 
-        self.deps = deps_and_types[0]
+        # DK returned a tuple rather than just a dict in JADN 0.7.2, fixed in JADN 0.7.3 >
+        # deps_and_types = build_deps(self.schema) 
+        # self.deps = deps_and_types[0]
+        
+        self.deps = build_deps(self.schema) 
         
         self.refs = defaultdict(lambda: defaultdict(set))
         for tn in self.deps:
