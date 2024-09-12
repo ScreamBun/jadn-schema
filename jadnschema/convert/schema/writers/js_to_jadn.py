@@ -12,6 +12,16 @@ D = [(f'${n}' if DEBUG else '') for n in range(10)]
 jss: dict = {}
 jssx: dict = {}
 
+"""
+*******
+DEPRECATED. (9/12/24)
+
+Using JADN's version per customer's request.
+TODO: Eventually remove once the logic below has been verified that it is no longer needed.
+
+*******
+"""
+
 def typedefname(jsdef: str) -> str:
     """
     Infer type name from a JSON Schema definition

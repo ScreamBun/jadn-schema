@@ -31,6 +31,16 @@ FieldMap = {
 TagContents = Union[complex, dict, float, int, list, str]
 
 
+"""
+*******
+DEPRECATED. (9/12/24)
+
+Removed per customer request.
+TODO: Eventually remove once the logic below has been verified that it is no longer needed.
+
+*******
+"""
+
 # Conversion Class
 @register_writer
 class JADNtoRelaxNG(BaseWriter):

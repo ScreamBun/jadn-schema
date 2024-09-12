@@ -25,6 +25,17 @@ FormatStyles = FrozenDict(
 )
 
 
+"""
+*******
+DEPRECATED. (9/12/24)
+
+Copied from JADN pypi, which has since been updated
+TODO: Eventually remove once the logic below has been verified that it is no longer needed.
+
+*******
+"""
+
+
 # Conversion Class
 @register_writer
 class JADNtoIDL(BaseWriter):
