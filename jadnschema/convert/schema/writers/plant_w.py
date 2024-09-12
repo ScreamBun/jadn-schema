@@ -10,6 +10,16 @@ from jadn.definitions import (TypeName, BaseType, TypeDesc, PRIMITIVE_TYPES,
 from jadn.utils import ftopts_s2d, multiplicity_str, jadn2fielddef
 
 
+"""
+*******
+DEPRECATED. (9/12/24)
+
+Copied from JADN pypi, which has since been updated
+TODO: Eventually remove once the logic below has been verified that it is no longer needed.
+
+*******
+"""
+
 # Wrap typenames at word boundaries to minimize node width, using a max of "lines" lines.
 def wrapstr(ss: str, lines: int = 3) -> str:
     p = 0
