@@ -13,17 +13,19 @@ def validate_schema(schema: dict)-> tuple[bool, str]:
 def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
    
     meta = {
-        "$schema": "https://json-schema.org/draft/2019-09/schema",
-        "$id": "https://oasis-open.org/openc2/jadn/v1.0",
-        "description": "Validates structure of a JADN schema, does not check values (required values included)",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://oasis-open.org/openc2/jadn/v1.1",
+        "description": "Validates the structure of a JADN schema, does not check values",
         "type": "object",
+        "required": ["types"],
         "additionalProperties": False,
         "properties": {
             "info": {
             "type": "object",
+            "required": ["package"],
             "additionalProperties": False,
             "properties": {
-                "package": {"type": "string"},
+                "package": {"$ref": "#/definitions/Uri"},
                 "version": {"type": "string"},
                 "title": {"type": "string"},
                 "description": {"type": "string"},
@@ -31,7 +33,8 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
                 "copyright": {"type": "string"},
                 "license": {"type": "string"},
                 "namespaces": {"$ref": "#/definitions/Namespaces"},
-                "exports": {"$ref": "#/definitions/Exports"},
+                "exports": {"$ref": "#/definitions/Roots"},
+                "roots": {"$ref": "#/definitions/Roots"},
                 "config": {"$ref": "#/definitions/Config"}
             }
             },
@@ -39,7 +42,7 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
             "type": "array",
             "items": {
                 "type": "array",
-                "minItems": 1,
+                "minItems": 2,
                 "maxItems": 5,
                 "items": [
                 {"$ref": "#/definitions/TypeName"},
@@ -53,18 +56,32 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
         },
         "definitions": {
             "Namespaces": {
+            "anyOf": [
+                {"$ref": "#/definitions/NsArr"},
+                {"$ref": "#/definitions/NsObj"}
+            ]
+            },
+            "NsArr": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/PrefixNs"}
+            },
+            "PrefixNs": {
+            "type": "array",
+            "items": [
+                {"$ref": "#/definitions/NSID"},
+                {"$ref": "#/definitions/Uri"}
+            ]
+            },
+            "NsObj": {
             "type": "object",
             "propertyNames": {"$ref": "#/definitions/NSID"},
             "patternProperties": {
-                "": {
-                "type": "string",
-                "format": "uri"
-                }
+                "": {"$ref": "#/definitions/Uri"}
             }
             },
-            "Exports": {
+            "Roots": {
             "type": "array",
-            "items": {"type": "string"}
+            "items": {"$ref": "#/definitions/TypeName"}
             },
             "Config": {
             "type": "object",
@@ -76,7 +93,8 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
                 "$Sys": {"type": "string", "minLength": 1, "maxLength": 1},
                 "$TypeName": {"type": "string", "minLength": 1, "maxLength": 127},
                 "$FieldName": {"type": "string", "minLength": 1, "maxLength": 127},
-                "$NSID": {"type": "string", "minLength": 1, "maxLength": 127}
+                "$NSID": {"type": "string", "minLength": 1, "maxLength": 127},
+                "$MaxDesc": {"type": "integer", "minValue":  1}
             }
             },
             "Fields": {
@@ -113,6 +131,9 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
             "NSID": {
             "type": "string"
             },
+            "Uri": {
+            "type": "string"
+            },
             "TypeName": {
             "type": "string"
             },
@@ -136,7 +157,7 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
             "type": "string"
             }
         }
-    }
+        }
 
     try:
         Draft201909Validator(meta).validate(schema)

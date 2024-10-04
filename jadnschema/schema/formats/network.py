@@ -142,8 +142,13 @@ def IPv4_Network(val: Union[list, str, tuple]) -> Union[IPv4Address, IPv4Network
     elif '/' in val:
         val = val.split("/")
         try:
-            bytes = base64.b64decode(val[0]) #decode
+            # bytes = base64.b64decode(val[0]) #decode
+            # bin = bytes.decode("utf-8")
+
+            bytes = bytes.fromhex(val[0]) #decode
             bin = bytes.decode("utf-8")
+
+
         except Exception as e:
             raise TypeError(f"{e}")
         val = [bin, val[1]]
