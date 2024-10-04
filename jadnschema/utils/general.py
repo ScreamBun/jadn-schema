@@ -178,6 +178,10 @@ def get_max_len(cls) -> int:
     if cls.__options__.maxv is None:
         try:
             maxProps = cls.__config__.info.get('$MaxString')
+            
+            if maxProps is None:
+                maxProps = config.MaxElements              
+            
         except AttributeError:
             maxProps = config.MaxElements
             pass   
@@ -192,6 +196,10 @@ def get_max_len_binary(cls) -> int:
     if cls.__options__.maxv is None:
         try:
             maxProps = cls.__config__.info.get('$MaxBinary')
+            
+            if maxProps is None:
+                maxProps = config.MaxElements            
+            
         except AttributeError:
             maxProps = config.MaxElements
             pass   
@@ -206,9 +214,13 @@ def get_max_v(cls) -> int:
     if cls.__options__.maxv is None:
         try:
             maxProps = cls.__config__.info.get('$MaxElements')
+            
+            if maxProps is None:
+                maxProps = config.MaxElements        
+            
         except AttributeError:
             maxProps = config.MaxElements
-            pass   
+            pass
     else:
         maxProps = cls.__options__.maxv or config.MaxElements
         

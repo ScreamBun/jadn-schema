@@ -13,10 +13,37 @@ class CommandValidation(TestCase):
     # _schema = f"{_test_root}/schema/oc2ls-v1.1-lang_resolved.jadn"
     _schema = f"{_test_root}/schema/oc2ls-v1.0.1-resolved.jadn"
     # _schema = f"{_test_root}/schema/test-schema.jadn"
+    
+    _test_schema = {
+                        "info": {
+                            "package": "http://test/v1.0",
+                            "exports": ["Record-Test"]
+                        },
+                        "types": [
+                            ["String-Test", "String", ["/ipv4"], ""],
+                            ["Record-Test", "Record", ["{1"], "", [
+                                [1, "field_value_1", "String", ["[1"], ""]
+                            ]]
+                        ]
+                    }
 
     @classmethod
     def setUpClass(cls) -> None:
         cls._schema_obj = Schema.parse_file(cls._schema)
+        cls._test_schema_obj = Schema.loads(cls._test_schema)
+        
+    def test_simple(self):
+        test_err = None
+        try:
+            self._test_schema_obj.validate_as("Record-Test", {
+                                                                "field_value_1": "213.153.57.102"
+                                                             })
+        except Exception as err: 
+            test_err = err
+            print(err)
+            
+        self.assertIsNone(test_err)
+            
 
     def test_allow_mapOf(self):
         self._schema_obj.validate_as(RSP_TYPE, {
