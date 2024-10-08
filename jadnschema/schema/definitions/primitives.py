@@ -5,11 +5,12 @@ import re
 
 from functools import partial
 from typing import Any, Union
-from pydantic import ValidationError, root_validator
+from pydantic import ConfigDict, ValidationError, model_validator
+import pydantic
 
 from jadnschema.utils.general import get_max_len, get_max_len_binary
 from .definitionBase import DefinitionBase
-from .options import Options  # pylint: disable=unused-import
+from .options import Options
 __all__ = ["Primitive", "Binary", "Boolean", "Integer", "Number", "String", "validate_format"]
 Primitive = Union["Binary", "Boolean", "Integer", "Number", "String"]
 primitives = ["Binary", "Boolean", "Integer", "Number", "String"]
@@ -38,11 +39,12 @@ class Binary(DefinitionBase):
     """
     A sequence of octets. Length is the number of octets.
     """
-    __root__: str
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # __root__: str
     __options__ = Options(data_type="Binary")  # pylint: disable=used-before-assignment
 
     # Validation
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the string as a Binary type
@@ -50,21 +52,21 @@ class Binary(DefinitionBase):
         :raise ValueError: invalid data given
         :return: original value
         """
-        val = value.get("__root__", None)
+        val = value.get(pydantic.RootModel, None)
         if fmt := cls.__options__.format:
             validate_format(cls, fmt, val)
         val_len = len(val)
         min_len = cls.__options__.minv or 0
         max_len = get_max_len_binary(cls)
-        #TODO: get byte length?
+
         if min_len > val_len:
             raise ValidationError(f"{cls.name} is invalid, minimum length of {min_len} bytes not met")
         if max_len < val_len:
             raise ValidationError(f"{cls.name} is invalid, maximum length of {max_len} bytes exceeded")
         return value
 
-    class Config:
-        arbitrary_types_allowed = True
+    # class Config:
+    #     arbitrary_types_allowed = True
 
     class Options:
         data_type = "Binary"
@@ -74,11 +76,12 @@ class Boolean(DefinitionBase):
     """
     An element with one of two values: true or false.
     """
-    __root__: bool
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # __root__: bool
     __options__ = Options(data_type="Boolean")  # pylint: disable=used-before-assignment
 
-    class Config:
-        arbitrary_types_allowed = True
+    # class Config:
+    #     arbitrary_types_allowed = True
 
     class Options:
         data_type = "Boolean"
@@ -88,11 +91,12 @@ class Integer(DefinitionBase):
     """
     A positive or negative whole number.
     """
-    __root__: int
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # __root__: int
     __options__ = Options(data_type="Integer")  # pylint: disable=used-before-assignment
 
     # Validation
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the int as an Integer type
@@ -100,7 +104,7 @@ class Integer(DefinitionBase):
         :raise ValueError: invalid data given
         :return: original value
         """
-        val = value.get("__root__", None)
+        val = value.get(pydantic.RootModel, None)
         if fmt := cls.__options__.format:
             validate_format(cls, fmt, str(val))
         min_val = cls.__options__.minv or 0
@@ -112,8 +116,8 @@ class Integer(DefinitionBase):
             raise ValidationError(f"{cls.name} is invalid, maximum of {max_val} exceeded")
         return value
 
-    class Config:
-        arbitrary_types_allowed = True
+    # class Config:
+    #     arbitrary_types_allowed = True
 
     class Options:
         data_type = "Integer"
@@ -123,11 +127,12 @@ class Number(DefinitionBase):
     """
     A real number.
     """
-    __root__: float
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # __root__: float
     __options__ = Options(data_type="Number")  # pylint: disable=used-before-assignment
 
     # Validation
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the float as a Number type
@@ -135,7 +140,7 @@ class Number(DefinitionBase):
         :raise ValueError: invalid data given
         :return: original value
         """
-        val = value.get("__root__", None)
+        val = value.get(pydantic.RootModel, None)
         if fmt := cls.__options__.format:
             validate_format(cls, fmt, str(val))
         min_val = cls.__options__.minf or 0
@@ -147,8 +152,8 @@ class Number(DefinitionBase):
             raise ValidationError(f"{cls.name} is invalid, maximum of {max_val} exceeded")
         return value
 
-    class Config:
-        arbitrary_types_allowed = True
+    # class Config:
+    #     arbitrary_types_allowed = True
 
     class Options:
         data_type = "Number"
@@ -158,11 +163,12 @@ class String(DefinitionBase):
     """
     A sequence of characters, each of which has a Unicode codepoint. Length is the number of characters.
     """
-    __root__: str
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # __root__: str
     __options__ = Options(data_type="String")  # pylint: disable=used-before-assignment
 
     # Validation
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the string as a String type
@@ -170,7 +176,7 @@ class String(DefinitionBase):
         :raise ValueError: invalid data given
         :return: original value
         """
-        val = value.get("__root__", None)
+        val = value.get(pydantic.RootModel, None)
         if fmt := cls.__options__.format:
             validate_format(cls, fmt, val)
         val_len = len(val)
@@ -182,8 +188,8 @@ class String(DefinitionBase):
             raise ValueError(f"{cls.name} is invalid, maximum length of {max_len} characters exceeded")
         return value
 
-    class Config:
-        arbitrary_types_allowed = True
+    # class Config:
+    #     arbitrary_types_allowed = True
 
     class Options:
         data_type = "String"

@@ -3,21 +3,22 @@ JADN Structure Types
 """
 from enum import Enum, EnumMeta
 from typing import Any, ClassVar, Optional, Union
-from pydantic import Extra, root_validator
-from pydantic.utils import GetterDict
+from pydantic import ConfigDict, model_validator
+import pydantic
+from pydantic.v1.utils import GetterDict
 
-from jadnschema.schema.info import Config
 from jadnschema.utils.general import get_max_v
 
-from .definitionBase import DefinitionBase, DefinitionMeta
-from .options import Options  # pylint: disable=unused-import
+from .definitionBase import DefinitionBase
+from .options import Options 
 from .primitives import validate_format
 
 __all__ = ["Array", "ArrayOf", "Choice", "Enumerated", "Map", "MapOf", "Record"]
 
 
 # Meta Classes
-class OptionalFieldsMeta(DefinitionMeta):
+# class OptionalFieldsMeta(DefinitionMeta):
+class OptionalFieldsMeta():
     def __new__(mcs, name, bases, attrs, **kwargs):  # pylint: disable=bad-classmethod-argument
         annotations = attrs.get('__annotations__', {})
         for base in bases:
@@ -32,7 +33,8 @@ class OptionalFieldsMeta(DefinitionMeta):
         return super().__new__(mcs, name, bases, new_namespace, **kwargs)
 
 
-class EnumeratedMeta(DefinitionMeta):
+# class EnumeratedMeta(DefinitionMeta):
+class EnumeratedMeta():
     def __new__(mcs, name, bases, attrs, **kwargs):  # pylint: disable=bad-classmethod-argument
         base_enums = list(filter(None, [
             *[getattr(b, "__enums__", None) for b in reversed(bases) if issubclass(b, DefinitionBase) and b != DefinitionBase],
@@ -59,10 +61,10 @@ class Array(DefinitionBase):
     An ordered list of labeled fields with positionally-defined semantics.
     Each field has a position, label, and type.
     """
-    # __root__: Union[set, str, tuple]
+    # pydantic.RootModel: Union[set, str, tuple]
     __options__ = Options(data_type="Array")  # pylint: disable=used-before-assignment
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the data as an Array type
@@ -93,7 +95,7 @@ class Array(DefinitionBase):
                     value = [value]
     
             # PASS : {ipv4-addr: MTI3LjAuMC4x, prefix-length: 30}
-            value = {k:v for k,v in zip(cls.__fields__.keys(), value)}
+            value = {k:v for k,v in zip(cls.model_fields.keys(), value)}
 
             minProps = cls.__options__.minv or 0
             maxProps = get_max_v(cls)
@@ -116,10 +118,10 @@ class ArrayOf(DefinitionBase):
     Each field has type vtype.
     Ordering and uniqueness are specified by a collection option.
     """
-    __root__: Union[set, str, tuple]
+    pydantic.RootModel: Union[set, str, tuple]
     __options__ = Options(data_type="ArrayOf")  # pylint: disable=used-before-assignment
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the data as an ArrayOf type
@@ -127,7 +129,7 @@ class ArrayOf(DefinitionBase):
         :raise ValueError: invalid data given
         :return: original data
         """
-        val = value.get("__root__", None)
+        val = value.get(pydantic.RootModel, None)
 
         # check format: within []
         if not isinstance(val, list):
@@ -182,14 +184,16 @@ class ArrayOf(DefinitionBase):
         data_type = "ArrayOf"
 
 
-class Choice(DefinitionBase, metaclass=OptionalFieldsMeta):
+# class Choice(DefinitionBase, metaclass=OptionalFieldsMeta):
+class Choice(DefinitionBase):  
     """
     A discriminated union: one type selected from a set of named or labeled types.
     """
-    # __root__: Union[set, str, tuple]
+    model_config = ConfigDict(extra='allow')
+    # pydantic.RootModel: Union[set, str, tuple]
     __options__ = Options(data_type="Choice")  # pylint: disable=used-before-assignment
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the data as an Choice type
@@ -199,12 +203,12 @@ class Choice(DefinitionBase, metaclass=OptionalFieldsMeta):
         """
 
         # If primitive directly in choice
-        if val := value.get("__root__"):
+        if val := value.get(pydantic.RootModel):
 
             if len(value.keys()) > 1:
                 raise ValueError(f"Choice type should only have one field, not {len(value.keys())}")
             
-            for v in cls.__fields__.keys():
+            for v in cls.model_fields.keys():
                 if val == v:
                     return value
                 
@@ -218,15 +222,16 @@ class Choice(DefinitionBase, metaclass=OptionalFieldsMeta):
     class Options:
         data_type = "Choice"
 
-    class Config:
-        extra = Extra.allow
+    # class Config:
+    #     extra = 'allow'
 
 
-class Enumerated(DefinitionBase, metaclass=EnumeratedMeta):  # pylint: disable=invalid-metaclass
+# class Enumerated(DefinitionBase, metaclass=EnumeratedMeta):  # pylint: disable=invalid-metaclass
+class Enumerated(DefinitionBase):  # pylint: disable=invalid-metaclass
     """
     A vocabulary of items where each item has an id and a string value.
     """
-    __root__: Union[int, str]
+    pydantic.RootModel: Union[int, str] 
     __options__ = Options(data_type="Enumerated")  # pylint: disable=used-before-assignment
     __enums__: ClassVar[Enum]
 
@@ -238,7 +243,7 @@ class Enumerated(DefinitionBase, metaclass=EnumeratedMeta):  # pylint: disable=i
                 [[v.value.extra["id"], v.value.default, v.value.description or ""] for v in cls.__enums__]]
 
     # Validation
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the value as an Enumerated type
@@ -246,7 +251,7 @@ class Enumerated(DefinitionBase, metaclass=EnumeratedMeta):  # pylint: disable=i
         :raise ValueError: invalid data given
         :return: original value
         """
-        val = value.get("__root__", None)
+        val = value.get(pydantic.RootModel, None)
         if cls.__options__.id:
             for v in cls.__enums__:
                 if val == v.value.extra.get("id", None):
@@ -275,14 +280,15 @@ class Map(DefinitionBase):
     An unordered map from a set of specified keys to values with semantics bound to each key.
     Each key has an id and name or label, and is mapped to a value type.
     """
-    # __root__: dict
+    model_config = ConfigDict(extra='allow')
+    # pydantic.RootModel: dict
     __options__ = Options(data_type="Map")  # pylint: disable=used-before-assignment
 
     # Validation
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict):  # pylint: disable=no-self-argument
 
-        schema_keys = cls.__fields__.keys()
+        schema_keys = cls.model_fields.keys()
         for msg_k, msg_v in value.items():
             if msg_k not in schema_keys:
                 raise ValueError(f"KeyType of `{msg_k}` is not valid within the schema") 
@@ -298,8 +304,8 @@ class Map(DefinitionBase):
 
         return value
 
-    class Config:
-        extra = Extra.allow
+    # class Config:
+    #     extra = 'allow'
 
     class Options:
         data_type = "Map"
@@ -311,10 +317,11 @@ class MapOf(DefinitionBase):
     An unordered map from a set of keys of the same type to values with the same semantics.
     Each key has key type ktype, and is mapped to value type vtype.
     """
-    __root__: Union[set, str, tuple]
+    model_config = ConfigDict(extra='allow')
+    pydantic.RootModel: Union[set, str, tuple]
     __options__ = Options(data_type="MapOf")  # pylint: disable=used-before-assignment
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the data as a MapOf type
@@ -323,7 +330,7 @@ class MapOf(DefinitionBase):
         :return: original data
         """
 
-        val = value.get("__root__", None)
+        val = value.get(pydantic.RootModel, None)
 
         minProps = cls.__options__.minv or 0
         maxProps = get_max_v(cls)
@@ -362,8 +369,8 @@ class MapOf(DefinitionBase):
         # TODO: finish compact to verbose
         return value
 
-    class Config:
-        extra = Extra.allow
+    # class Config:
+    #     extra = 'allow'
 
     class Options:
         data_type = "MapOf"
@@ -374,10 +381,12 @@ class Record(DefinitionBase):
     An ordered map from a list of keys with positions to values with positionally-defined semantics.
     Each key has a position and name, and is mapped to a value type. Represents a row in a spreadsheet or database table.
     """
-    #__root__: dict
+    #pydantic.RootModel: dict
+    
+    model_config = ConfigDict(extra='forbid')
     __options__ = Options(data_type="Record")  # pylint: disable=used-before-assignment
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def validate_data(cls, value: dict) -> dict:  # pylint: disable=no-self-argument
         """
         Pydantic validator - validate the data as a Record type
@@ -397,8 +406,8 @@ class Record(DefinitionBase):
 
         return value
 
-    class Config:
-        extra = Extra.forbid
+    # class Config:
+    #     extra = 'forbid'
 
     class Options:
         data_type = "Record"

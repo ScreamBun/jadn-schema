@@ -5,7 +5,7 @@ import json
 import os
 
 from typing import List, Union
-from pydantic.fields import ModelField  # pylint: disable=no-name-in-module
+from pydantic.v1.fields import ModelField  # pylint: disable=no-name-in-module
 from .baseWriter import BaseWriter
 from .utils import DocHTML
 from ..constants import HTML_Escapes

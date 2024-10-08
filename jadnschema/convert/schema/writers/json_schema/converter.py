@@ -5,7 +5,7 @@ import json
 import re
 
 from typing import Any, Tuple, Union
-from pydantic.fields import ModelField  # pylint: disable=no-name-in-module
+from pydantic.v1.fields import ModelField 
 from .consts import EmptyValues, FieldMap, JADN_FMT, OptionKeys, SchemaOrder, ValidationMap
 from ..baseWriter import BaseWriter
 from ...enums import CommentLevels, JsonEnumStyle, JsonImportStyle, JsonRootStyle

@@ -8,8 +8,9 @@ from io import BufferedIOBase, TextIOBase
 from numbers import Number
 from pathlib import Path
 from typing import Any, Callable, Dict, List, NoReturn, Optional, Set, Union, get_args
-from pydantic import Field, root_validator
-from pydantic.main import ModelMetaclass, PrivateAttr  # pylint: disable=no-name-in-module
+from pydantic import Field, model_validator
+import pydantic
+from pydantic._internal._model_construction import ModelMetaclass
 from .baseModel import BaseModel
 from .consts import EXTENSIONS, OPTION_ID
 from .info import Exports, Information
@@ -31,7 +32,7 @@ def update_types(types: Union[dict, list], formats: Dict[str, Callable] = None, 
         cls_defs.update(DefTypes)
         for def_cls in def_types.values():
             try:
-                def_cls.update_forward_refs(**cls_defs)
+                def_cls.model_rebuild(**cls_defs)
             except Exception as err:
                 # Schema is unresolved
                 if namespace and err.name.split('__')[0] in namespace:
@@ -43,7 +44,7 @@ def update_types(types: Union[dict, list], formats: Dict[str, Callable] = None, 
 
 
 class SchemaMeta(ModelMetaclass):
-    def __new__(mcs, name, bases, attrs, **kwargs):  # pylint: disable=bad-classmethod-argument
+    def __new__(mcs, name, bases, attrs, **kwargs):
         new_namespace = {
             **attrs,
             "_info": "info" in attrs
@@ -51,16 +52,17 @@ class SchemaMeta(ModelMetaclass):
         if types := attrs.get("types", None):
             new_namespace["types"] = update_types(types, attrs.get("validation"))
 
-        return super().__new__(mcs, name, bases, new_namespace, **kwargs)  # pylint: disable=too-many-function-args
+        return super().__new__(mcs, name, bases, new_namespace, **kwargs)
 
 
-class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metaclass
+class Schema(BaseModel, metaclass=SchemaMeta):
     """
     JADN Schema
     """
     info: Optional[Information] = Field(default_factory=Information)
     types: dict = Field(default_factory=dict)  # Dict[str, Definition]
-    _info: bool = PrivateAttr(False)
+    # _info: bool = PrivateAttr(False)
+    _info: bool = False
     __formats__: Dict[str, Callable] = ValidationFormats
 
     def __init__(self, **kwargs):
@@ -71,6 +73,7 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         
         if "info" in kwargs and "config" in kwargs["info"]:
             DefinitionBase.__config__.info = kwargs["info"]["config"]
+            # DefinitionBase.info = kwargs["info"]["config"]
     
         if "types" in kwargs:
             kwargs["types"] = update_types(kwargs["types"], self.__formats__, nms)
@@ -119,7 +122,7 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
             return cls.validate(value)
         raise SchemaException(f"{type_} is not a valid type within the schema")
     
-    @root_validator
+    @model_validator(mode="after")
     def validate_exports(cls, v):
         invalid_exports=[]
         #check if info and info.exports exist
@@ -132,7 +135,7 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
                     raise SchemaException(f"Invalid exports within the schema: {invalid_exports}")  
         return v          
     
-    @root_validator
+    @model_validator(mode="after") 
     def validate_dependencies(cls, v): # Validate ktype and vtype
         jadnType = [i.data_type for i in get_args(Definition)]
         if v is not None and v.get("types") is not None:  
@@ -211,7 +214,7 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
                 } - base_deps
             elif def_cls.has_fields():
                 fields = def_cls.__fields__
-                if "__root__" in fields:
+                if pydantic.RootModel in fields:
                     deps[def_cls.name] = {
                         def_cls.__options__.get("ktype", "String"),
                         def_cls.__options__.get("vtype", "String")
@@ -297,11 +300,11 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         :return: Loaded schema
         """
         if isinstance(fname, (BufferedIOBase, TextIOBase)):
-            return cls.parse_raw(fname.read())
+            return cls.model_validate(fname.read())
 
         if isinstance(fname, str):
             if os.path.isfile(fname):
-                return cls.parse_file(fname)
+                return cls.model_validate(fname)
             raise FileNotFoundError(f"Schema file not found - '{fname}'")
         raise TypeError("fname is not valid")
 
@@ -313,8 +316,8 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         :return: Loaded schema
         """
         if isinstance(schema, dict):
-            return cls.parse_obj(schema)
-        return cls.parse_raw(schema)
+            return cls.model_validate(schema)
+        return cls.model_validate(schema)
 
     def simplify(self, extensions: Set[str] = None) -> "Schema":
         """

@@ -4,7 +4,7 @@ JADN Definition & Type Options
 import inspect
 
 from typing import Callable, Dict, List, Optional, Tuple, Union
-from pydantic import Extra, root_validator
+from pydantic import ConfigDict, model_validator
 from ..baseModel import BaseModel
 from ..consts import ALLOWED_TYPE_OPTIONS, REQUIRED_TYPE_OPTIONS, OPTIONS, OPTION_ID, TYPE_OPTION_KEYS, FIELD_OPTION_KEYS
 from ..formats import ValidationFormats
@@ -16,6 +16,8 @@ MULTI_CHECK: Callable[[int, int], bool] = lambda x, y: True
 
 
 class Options(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    
     # Custom Options
     data_type: str = ""                                  #: Data type of the definition the options are attached
     name: Optional[str] = ""                             #: Name of the definition the options are attached
@@ -50,25 +52,25 @@ class Options(BaseModel):
         data = {}
         for arg in args:
             if inspect.isclass(arg) or isinstance(arg, Options):
-                keys = [*self.__fields__, *self.__custom__]
+                keys = [*self.model_fields, *self.__custom__]
                 data.update({k: getattr(arg, k) for k in keys if getattr(arg, k, None) not in NULL_ARGS})
             elif isinstance(arg, list):
                 data.update(self.list2dict(arg))
             elif isinstance(arg, dict):
                 data.update(arg)
         data.update(kwargs)
-        super().__init__(**data)
+        # super().__init__(**data) 
 
     def schema(self) -> List[str]:
         """
         Format options into valid JADN format for the base type they are attached
         :return: JADN formatted options
         """
-        return self.dict2list(self.dict(exclude_unset=True))
+        return self.dict2list(self.model_dump(exclude_unset=True))
 
     # Validation
-    @root_validator(pre=True)
-    def validate_data(cls, opts: dict):  # pylint: disable=no-self-argument
+    @model_validator(mode="before") 
+    def validate_data(cls, opts: dict): 
         """
         Pydantic validator - validate the options for the attached data type
         :param opts: options to validate
@@ -201,15 +203,15 @@ class Options(BaseModel):
         Split the options into Field options and Type options
         :return: Tuple of Field & Type options
         """
-        field_opts = Options({f: self[f] for f in self.__fields__ if f in FIELD_OPTION_KEYS and self[f] is not None})
-        type_opts = Options({f: self[f] for f in self.__fields__ if f in TYPE_OPTION_KEYS if self[f] is not None})
+        field_opts = Options({f: self[f] for f in self.model_fields if f in FIELD_OPTION_KEYS and self[f] is not None})
+        type_opts = Options({f: self[f] for f in self.model_fields if f in TYPE_OPTION_KEYS if self[f] is not None})
         return field_opts, type_opts
 
-    class Config:
-        extra = Extra.forbid
-        smart_union = True
-        fields = {
-            "data_type": {"exclude": True},
-            "name": {"exclude": True},
-            "validation": {"exclude": True}
-        }
+    # class Config:
+    #     extra = 'forbid'
+        # smart_union = True
+        # fields = {
+        #     "data_type": {"exclude": True},
+        #     "name": {"exclude": True},
+        #     "validation": {"exclude": True}
+        # }

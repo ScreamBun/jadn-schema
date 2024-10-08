@@ -21,7 +21,7 @@ quickstart_schema = {
 }
 
 
-class BasicConvert:
+class BasicConvert(TestCase): 
     def _convert(self, schema):
         raise NotImplemented(f'The unittest class `{self.__class__.__name__}` should implement _convert')
 

@@ -19,7 +19,7 @@ __all__ = [
     "Boolean",
     "Integer",
     "Number",
-    "String",
+    "String", 
     "Array",
     "ArrayOf",
     "Choice",

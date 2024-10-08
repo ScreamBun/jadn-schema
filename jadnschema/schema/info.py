@@ -4,7 +4,7 @@ JADN Schema Meta/Info
 import re
 
 from typing import Any, Dict, List, Optional
-from pydantic import Field, PrivateAttr, validator
+from pydantic import ConfigDict, Field, PrivateAttr, field_validator
 from .baseModel import BaseModel
 
 
@@ -12,30 +12,32 @@ class Namespaces(BaseModel):
     """Packages with referenced type defs"""
     # keyType = NSID
     # valueType = String
-    __root__: Dict[str, str]
+    # __root__: Dict[str, str]
 
     def schema(self) -> Dict[str, str]:
         """
         Format this data into valid JADN format
         :return: JADN formatted data
         """
-        return self.__root__
+        return self.pydantic.RootModel
 
 
 class Exports(BaseModel):
     """Type defs intended to be referenced"""
-    __root__: List[str]
+    # __root__: List[str]
 
     def schema(self) -> List[str]:
         """
         Format this data into valid JADN format
         :return: JADN formatted data
         """
-        return self.__root__
+        return self.pydantic.RootModel
 
 
 class Config(BaseModel):
     """Config vars override JADN defaults"""
+    model_config = ConfigDict(populate_by_name=True)
+    
     #: Schema default max octets
     MaxBinary: Optional[int] = Field(255, alias="$MaxBinary", gt=1)
     #: Schema default max characters
@@ -62,7 +64,7 @@ class Config(BaseModel):
                 schema[conf.alias] = val
         return schema
 
-    @validator("TypeName", "FieldName", "NSID")
+    @field_validator("TypeName", "FieldName", "NSID")
     def regex_check(cls, val: str):  # pylint: disable=no-self-argument
         """
         Pydantic Validator - Verify the value of `TypeName`, `FieldName`, & `NSID` as a regex
@@ -76,8 +78,8 @@ class Config(BaseModel):
             raise ValueError from err
         return val
 
-    class Config:
-        allow_population_by_field_name = True
+    # class Config:
+    #     populate_by_name = True
 
 
 class Information(BaseModel):
@@ -105,7 +107,7 @@ class Information(BaseModel):
         :return: JADN formatted data
         """
         schema = {}
-        for field in self.__fields__:
+        for field in self.model_fields:
             if (val := getattr(self, field, None)) and val is not None:
                 schema[field] = val.schema() if hasattr(val, "schema") else val
         if not self._config:

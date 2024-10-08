@@ -1,3 +1,4 @@
+import json
 import os
 
 from unittest import TestCase, skip
@@ -12,6 +13,8 @@ class CommandValidation(TestCase):
     _test_root = os.path.join(os.path.abspath(os.path.dirname(__file__)))
     # _schema = f"{_test_root}/schema/oc2ls-v1.1-lang_resolved.jadn"
     _schema = f"{_test_root}/schema/oc2ls-v1.0.1-resolved.jadn"
+    with open(_schema, "r", encoding="utf-8") as f:
+        _schema_json = json.load(f)    
     # _schema = f"{_test_root}/schema/test-schema.jadn"
     
     _test_schema = {
@@ -29,8 +32,8 @@ class CommandValidation(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._schema_obj = Schema.parse_file(cls._schema)
-        cls._test_schema_obj = Schema.loads(cls._test_schema)
+        cls._schema_obj = Schema.model_validate(cls._schema_json)
+        cls._test_schema_obj = Schema.model_validate(cls._test_schema)
         
     def test_simple(self):
         test_err = None
@@ -148,7 +151,7 @@ class ResponseValidation(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._schema_obj = Schema.parse_file(cls._schema)
+        cls._schema_obj = Schema.model_validate(cls._schema)
 
     def test_pairs(self):
         self._schema_obj.validate_as(RSP_TYPE, {

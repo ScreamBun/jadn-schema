@@ -12,7 +12,6 @@ from jadnschema import Schema, convert
 schema = 'oc2ls-v1.1-lang_resolved'
 
 
-# TODO: Add CommentLevels, requires dump.py rewrite
 class Conversions(TestCase):
     _test_root = os.path.join(os.path.abspath(os.path.dirname(__file__)))
     _base_schema = f'{_test_root}/schema/{schema}.jadn'

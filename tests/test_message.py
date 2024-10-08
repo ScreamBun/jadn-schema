@@ -11,7 +11,7 @@ from jadnschema.convert import Message, SerialFormats
 schema = "oc2ls-v1.1-lang_resolved"
 
 
-# TODO: Add CommentLevels, requires dump.py rewrite
+
 class Messages(TestCase):
     _test_root = os.path.join(os.path.abspath(os.path.dirname(__file__)))
     _base_schema = f"{_test_root}/schema/{schema}.jadn"
@@ -21,7 +21,7 @@ class Messages(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._schema_obj = Schema.parse_file(cls._base_schema)
+        cls._schema_obj = Schema.model_validate(cls._base_schema)
 
     def _loadMessage(self, fmt: SerialFormats):
         with open(f"{self._test_root}/message/query_pairs.{fmt}", "rb") as f:

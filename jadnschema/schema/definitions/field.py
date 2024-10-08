@@ -3,8 +3,8 @@ JADN definition field helpers
 """
 from typing import Any, ForwardRef, Optional, Union, get_args, get_origin
 from pydantic import Field as pydanticField
-from pydantic.typing import NoArgAnyCallable  # pylint: disable=no-name-in-module
-from pydantic.fields import ModelField, Undefined  # pylint: disable=no-name-in-module
+from pydantic.v1.typing import NoArgAnyCallable
+from pydantic.v1.fields import ModelField
 from .options import Options
 
 
@@ -45,7 +45,7 @@ def getFieldSchema(field: ModelField) -> list:
     return schema
 
 
-def Field(default: Any = Undefined, *, default_factory: Optional[NoArgAnyCallable] = None, alias: str = None,
+def Field(default: Any = None, *, default_factory: Optional[NoArgAnyCallable] = None, alias: str = None,
     title: str = None, description: str = None, exclude: Union['AbstractSetIntStr', 'MappingIntStrAny', Any] = None,
     include: Union['AbstractSetIntStr', 'MappingIntStrAny', Any] = None, const: bool = None, gt: float = None,
     ge: float = None, lt: float = None, le: float = None, multiple_of: float = None, allow_inf_nan: bool = None,

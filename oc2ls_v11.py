@@ -2,7 +2,7 @@ from typing import Optional
 from jadnschema.schema import Schema
 from jadnschema.schema.info import Information
 from jadnschema.schema.definitions import *
-from pydantic import Extra
+from pydantic import ConfigDict, Extra
 
 
 # Primitive Types
@@ -160,6 +160,8 @@ class Artifact(Record):
 
 
 class Target(Choice):
+    model_config = ConfigDict(extra='allow')
+     
     artifact: Artifact = Field(id=1, description="An array of bytes representing a file-like object or a link to that object")
     command: CommandID = Field(id=2, description="A reference to a previously issued Command")
     device: Device = Field(id=3, description="The properties of a hardware device")
@@ -179,8 +181,8 @@ class Target(Choice):
     properties: Properties = Field(id=25, description="Data attribute associated with an Actuator")
     uri: URI = Field(id=19, description="A uniform resource identifier (URI)")
 
-    class Config:
-        extra = Extra.allow
+    # class Config:
+    #     extra = 'allow'
 
 
 class Action(Enumerated):
@@ -266,8 +268,9 @@ class Args(Map):
 
 
 class Actuator(Choice):
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra='allow')
+    # class Config:
+    #     extra = 'allow'
 
 
 class OpenC2Command(Record):
