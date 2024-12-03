@@ -17,12 +17,25 @@ def typedefname(jsdef: str) -> str:
     Infer type name from a JSON Schema definition
     """
     assert isinstance(jsdef, str), f'Not a type definition name: {jsdef}'
-    if d := jss['definitions'].get(jsdef, ''):
-        if ':' in jsdef:  # qualified definition name
-            return maketypename('', jsdef.split(':', maxsplit=1)[1]) + D[1]
-        if ref := d.get('$ref', ''):
-            return ref.removeprefix('#/definitions/')+ D[2]
-    return jsdef.removeprefix('#/definitions/') + D[0]     # Exact type name or none
+    if len(jss.get('definitions'))>0:
+        if d := jss['definitions'].get(jsdef, ''):
+            if ':' in jsdef:  # qualified definition name
+                return maketypename('', jsdef.split(':', maxsplit=1)[1]) + D[1]
+            if ref := d.get('$ref', ''):
+                return ref.removeprefix('#/definitions/')+ D[2]
+    elif len(jss.get('defs'))>0:
+        if d := jss['defs'].get(jsdef, ''):
+            if ':' in jsdef:  # qualified definition name
+                return maketypename('', jsdef.split(':', maxsplit=1)[1]) + D[1]
+            if ref := d.get('$ref', ''):
+                return ref.removeprefix('#/defs/')+ D[2]     
+    elif len(jss.get('properties'))>0:
+        if d := jss['properties'].get(jsdef, ''):
+            if ':' in jsdef:  # qualified definition name
+                return maketypename('', jsdef.split(':', maxsplit=1)[1]) + D[1]
+            if ref := d.get('$ref', ''):
+                return ref.removeprefix('#/properties/')+ D[2] 
+    return jsdef.removeprefix('#/defs/') + D[0]     # Exact type name or none
 
 
 def typerefname(jsref: dict) -> str:
@@ -35,10 +48,14 @@ def typerefname(jsref: dict) -> str:
         td = jssx.get(ref, ref)
         if td.startswith('#/definitions/'):  # Exact type name
             return td.removeprefix('#/definitions/') + D[5]
+        if td.startswith('#/defs/'):  # Exact type name
+            return td.removeprefix('#/defs/') + D[5]  # check length of string to append
         if ':' in td:
             return maketypename('', td.split(':', maxsplit=1)[1]) + D[6]  # Extract type name from $id
         if td2 := jss['definitions'].get(td, {}):
-            return typerefname(td2) + D[7]
+            return typerefname(td2) + D[7]        
+        if td2 := jss['defs'].get(td, {}):
+            return typerefname(td2) + D[7]  # check length of string to append
     return ''
 
 
@@ -104,16 +121,36 @@ def define_jadn_type(tn: str, tv: dict) -> list:
             fopts = ['[0'] if k not in req else []
             fdesc = v.get('description', '')
             if v.get('type', '') == 'array':
-                ftype = maketypename('', k)
-                idesc = jss['definitions'].get(jssx.get(v['items'].get('$ref', ''), ''), {}).get('description', '')
-                fdesc = fdesc if fdesc else v['items'].get('description', idesc)
+                if len(jss.get('definitions', ''))>0:
+                    ftype = maketypename('', k)
+                    idesc = jss['definitions'].get(jssx.get(v['items'].get('$ref', ''), ''), {}).get('description', '')
+                    fdesc = fdesc if fdesc else v['items'].get('description', idesc)
+                elif len(jss.get('defs'))>0:
+                    ftype = maketypename('', k)
+                    idesc = jss['defs'].get(jssx.get(v['items'].get('$ref', ''), ''), {}).get('description', '')
+                    fdesc = fdesc if fdesc else v['items'].get('description', idesc)                
+                elif len(jss.get('properties'))>0:
+                    ftype = maketypename('', k)
+                    idesc = jss['properties'].get(jssx.get(v['items'].get('$ref', ''), ''), {}).get('description', '')
+                    fdesc = fdesc if fdesc else v['items'].get('description', idesc)
             elif v.get('type', '') == 'object':
                 ftype = tn
             elif t := jssx.get(v.get('$ref', ''), ''):
-                rt = jss['definitions'][t].get('$ref', '')
-                ftype = typedefname(rt if rt else t)
-                ft = jss['definitions'][t]
-                fdesc = ft.get('description', '')
+                if len(jss.get('definitions'))>0:
+                    rt = jss['definitions'][t].get('$ref', '')
+                    ftype = typedefname(rt if rt else t)
+                    ft = jss['definitions'][t]
+                    fdesc = ft.get('description', '')
+                elif len(jss.get('defs'))>0:
+                    rt = jss['defs'][t].get('$ref', '')
+                    ftype = typedefname(rt if rt else t)
+                    ft = jss['defs'][t]
+                    fdesc = ft.get('description', '')
+                elif len(jss.get('properties'))>0:
+                    rt = jss['properties'][t].get('$ref', '')
+                    ftype = typedefname(rt if rt else t)
+                    ft = jss['properties'][t]
+                    fdesc = ft.get('description', '')
             elif v.get('anyOf', '') or v.get('allOf', ''):
                 ftype = maketypename(tn, k)
             else:
@@ -160,14 +197,27 @@ def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = C
     """
     
     global jss
+    types_from = ""
     if isinstance(schema, str):
         jss = json.loads(schema)
     else:
         jss = schema    
     
     global jssx
-    jssx = {v.get('$id', k): k for k, v in jss['definitions'].items()}      # Index from $id to definition
-    types = {typedefname(k): v for k, v in jss['definitions'].items()}      # Index from type name to definition
+    if len(jss.get('definitions'))>0:
+        jssx = {v.get('$id', k): k for k, v in jss['definitions'].items()}      # Index from $id to definition
+        types = {typedefname(k): v for k, v in jss['definitions'].items()}      # Index from type name to definition
+        types_from = 'definitions'
+    elif len(jss.get('defs'))>0: 
+        jssx = {v.get('$id', k): k for k, v in jss['defs'].items()}      # Index from $id to definition
+        types = {typedefname(k): v for k, v in jss['defs'].items()}      # Index from type name to definition
+        types_from = 'defs'
+    else:
+        jssx = {v.get('$id', k): k for k, v in jss['properties'].items()}      # Index from $id to definition
+        types = {typedefname(k): v for k, v in jss['properties'].items()}      # Index from type name to definition
+        types_from = 'properties'
+        
+
     assert len(types) == len(set(types)), f'Type name collision'
 
     info = {'package': jss['$id']}
@@ -177,8 +227,18 @@ def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = C
 
     nt = []     # Walk nested type definition tree to build type list
     scandef('$Root', jss, nt)
-    for tn, tv in jss['definitions'].items():
-        scandef(tn, tv, nt)
+    if types_from == 'definitions':
+        for tn, tv in jss['definitions'].items():
+            scandef(tn, tv, nt)
+    if types_from == 'defs':
+        for tn, tv in jss['defs'].items():
+            scandef(tn, tv, nt)
+    if types_from == 'properties':
+        for tn, tv in jss['properties'].items():
+            scandef(tn, tv, nt)
+    else:
+        for tn, tv in jss['definitions'].items():
+            scandef(tn, tv, nt)
 
     ntypes = []     # Prune identical type definitions
     for t in nt:
