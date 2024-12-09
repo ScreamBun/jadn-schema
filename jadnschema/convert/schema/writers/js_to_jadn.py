@@ -22,7 +22,6 @@ def typedefname(jsdef: str, type_from: str) -> str:
     else: prefix =('#/'+type_from+'/')
     assert isinstance(jsdef, str), f'Not a type definition name: {jsdef}'
     if jss[type_from].get(jsdef, ''):
-        print("if1")
         if d := jss[type_from].get(jsdef, ''):
             if ':' in jsdef:  # qualified definition name
                 colon_separated_name = maketypename('', jsdef.split(':', maxsplit=1)[1], type_from) + D[1]
