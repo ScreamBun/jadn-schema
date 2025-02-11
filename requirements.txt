@@ -1,4 +1,4 @@
-amazon.ion@git+https://github.com/amzn/ion-python.git
+amazon.ion==0.13.0
 bson==0.5.10
 cbor2==5.6.4
 edn_format==0.7.5
