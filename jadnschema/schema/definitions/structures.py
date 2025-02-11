@@ -78,7 +78,7 @@ class Array(DefinitionBase):
                 print(f"Array format: {value}")
                 validate_format(cls, fmt, value)
 
-                # special case : format MTI3LjAuMC4x/30 to [MTI3LjAuMC4x, 30]
+                # special case : format MTI3LjAuMC4x/30 to [MTI3LjAuMC4x, 30] - b64 ip-nets no longer accepted, being sunset.
                 if isinstance(value, (list, tuple)):
                     value = value
                 elif '/' in value:

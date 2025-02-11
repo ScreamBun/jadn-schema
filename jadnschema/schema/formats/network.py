@@ -142,15 +142,23 @@ def IPv4_Network(val: Union[list, str, tuple]) -> Union[IPv4Address, IPv4Network
     elif '/' in val:
         val = val.split("/")
         try:
-            bytes = base64.b64decode(val[0]) #decode
+            # bytes = base64.b64decode(val[0]) #decode
+            # bin = bytes.decode("utf-8")
+
+            bytes = bytes.fromhex(val[0]) #decode
             bin = bytes.decode("utf-8")
+
+
         except Exception as e:
             raise TypeError(f"{e}")
         val = [bin, val[1]]
     else:
         try:
-            bytes = base64.b64decode(val) #decode
-            val = [bytes.decode("utf-8")]
+            # bytes = base64.b64decode(val[0]) #decode
+            # bin = bytes.decode("utf-8")
+
+            bytes = bytes.fromhex(val[0]) #decode
+            bin = bytes.decode("utf-8")
         except Exception as e:
             raise TypeError(f"{e}")
     
@@ -180,15 +188,21 @@ def IPv6_Network(val: Union[list, str, tuple]) -> Union[IPv6Address, IPv6Network
     elif '/' in val:
         val = val.split("/")
         try:
-            bytes = base64.b64decode(val[0]) #decode
+            # bytes = base64.b64decode(val[0]) #decode
+            # bin = bytes.decode("utf-8")
+
+            bytes = bytes.fromhex(val[0]) #decode
             bin = bytes.decode("utf-8")
         except Exception as e:
             raise TypeError(f"{e}")
         val = [bin, val[1]]
     else:
         try:
-            bytes = base64.b64decode(val) #decode
-            val = [bytes.decode("utf-8")]
+            # bytes = base64.b64decode(val[0]) #decode
+            # bin = bytes.decode("utf-8")
+
+            bytes = bytes.fromhex(val[0]) #decode
+            bin = bytes.decode("utf-8")
         except Exception as e:
             raise TypeError(f"{e}")
         
