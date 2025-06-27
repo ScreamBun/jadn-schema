@@ -75,12 +75,12 @@ class JADNtoJSON(BaseWriter):
         Create the headers for the schema
         :return: header for schema
         """
-        module = self._schema.info.get("package", "")
+        module = self._schema.meta.get("package", "")
         return self._cleanEmpty({
             "$schema": "http://json-schema.org/draft-07/schema#",
             "$id": f"{'' if module.startswith('http') else 'http://'}{module}",
-            "title": self._schema.info.title if hasattr(self._schema.info, "title") else (module + (f" v.{self._schema.info.patch}" if hasattr(self._schema.info, "patch") else "")),
-            "description": self._cleanComment(self._schema.info.get("description", ""))
+            "title": self._schema.meta.title if hasattr(self._schema.meta, "title") else (module + (f" v.{self._schema.meta.patch}" if hasattr(self._schema.info, "patch") else "")),
+            "description": self._cleanComment(self._schema.meta.get("description", ""))
         })
 
     # Structure Formats
@@ -296,7 +296,7 @@ class JADNtoJSON(BaseWriter):
 
         if ":" in field_type:
             src, attr = field_type.split(":", 1)
-            if imports := self._schema.info.imports:
+            if imports := self._schema.meta.imports:
                 if src in imports:
                     fmt = "" if imports[src].endswith(".json") else ".json"
                     return {"$ref": f"{imports[src]}{fmt}#/definitions/{attr}"}

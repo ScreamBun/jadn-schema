@@ -59,7 +59,7 @@ class BaseWriter:
             self._schema = Schema.parse_file(schema)
         else:
             self._schema = Schema.parse_raw(schema)
-        self._exports = getattr(self._schema.info, "exports", [])
+        self._exports = getattr(self._schema.meta, "exports", [])
         self._comm = comm if comm in CommentLevels else CommentLevels.ALL
         self._customFields = {t.name: t.data_type for t in self._schema.types.values()}
 

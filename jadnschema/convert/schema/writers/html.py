@@ -37,7 +37,7 @@ class JADNtoHTML(BaseWriter):
 
         with tag("head"):
             tag("meta", charset="UTF-8")
-            tag("title", self._schema.info.get("title", "JADN Schema Convert"))
+            tag("title", self._schema.meta.get("title", "JADN Schema Convert"))
             # tag("link", rel="stylesheet", href=f"{data_dir()}/theme.css", type="text/css")
             tag("style", self._loadStyles(styles), type="text/css")
             tag("script", self._loadScript(), type="text/javascript")
@@ -58,7 +58,7 @@ class JADNtoHTML(BaseWriter):
         :return: header for schema
         """
         with tag("table"):
-            for key, val in self._schema.info.items():
+            for key, val in self._schema.meta.items():
                 with tag("tr"):
                     tag("td", f"{key}:", klass="h")
                     tag("td", json.dumps(val), klass="s")

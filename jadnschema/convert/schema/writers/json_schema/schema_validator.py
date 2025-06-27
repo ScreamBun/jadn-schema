@@ -1,10 +1,10 @@
-from jsonschema import Draft201909Validator, ValidationError, SchemaError
+from jsonschema import Draft201909Validator, Draft202012Validator, ValidationError, SchemaError
 
 def validate_schema(schema: dict)-> tuple[bool, str]:
     #TODO: Allow the ability to chose different Draft Validator versions
 
     try:
-        Draft201909Validator.check_schema(schema)
+        Draft202012Validator.check_schema(schema)
         return True, "Schema is Valid"
 
     except ValidationError as e:
@@ -24,23 +24,23 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
         "required": ["types"],
         "additionalProperties": False,
         "properties": {
-            "info": {
-            "type": "object",
-            "required": ["package"],
-            "additionalProperties": False,
-            "properties": {
-                "package": {"$ref": "#/definitions/Uri"},
-                "version": {"type": "string"},
-                "title": {"type": "string"},
-                "description": {"type": "string"},
-                "comment": {"type":  "string"},
-                "copyright": {"type": "string"},
-                "license": {"type": "string"},
-                "namespaces": {"$ref": "#/definitions/Namespaces"},
-                "exports": {"$ref": "#/definitions/Roots"},
-                "roots": {"$ref": "#/definitions/Roots"},
-                "config": {"$ref": "#/definitions/Config"}
-            }
+            "meta": {
+                "type": "object",
+                "required": ["package"],
+                "additionalProperties": False,
+                "properties": {
+                    "package": {"$ref": "#/definitions/Uri"},
+                    "version": {"type": "string"},
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "comment": {"type":  "string"},
+                    "copyright": {"type": "string"},
+                    "license": {"type": "string"},
+                    "namespaces": {"$ref": "#/definitions/Namespaces"},
+                    "exports": {"$ref": "#/definitions/Roots"},
+                    "roots": {"$ref": "#/definitions/Roots"},
+                    "config": {"$ref": "#/definitions/Config"}
+                }
             },
             "types": {
             "type": "array",

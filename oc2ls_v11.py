@@ -1,6 +1,6 @@
 from typing import Optional
 from jadnschema.schema import Schema
-from jadnschema.schema.info import Information
+from jadnschema.schema.meta import Metadata
 from jadnschema.schema.definitions import *
 from pydantic import Extra
 

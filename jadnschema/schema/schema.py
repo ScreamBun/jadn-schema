@@ -12,14 +12,14 @@ from pydantic import Field, root_validator
 from pydantic.main import ModelMetaclass, PrivateAttr  # pylint: disable=no-name-in-module
 from .baseModel import BaseModel
 from .consts import EXTENSIONS, OPTION_ID
-from .info import Exports, Information
+from .meta import Exports, Metadata
 from .definitions import DefTypes, Definition, DefinitionBase, make_def
 from .definitions.field import getFieldType
 from .extensions import unfold_extensions
 from .formats import ValidationFormats
 from ..exceptions import FormatError, SchemaException
 __pdoc__ = {
-    "Schema.info": "Information about this package",
+    "Schema.meta": "Metadata about this package",
     "Schema.types": "Types defined in this package"
 }
 
@@ -46,7 +46,7 @@ class SchemaMeta(ModelMetaclass):
     def __new__(mcs, name, bases, attrs, **kwargs):  # pylint: disable=bad-classmethod-argument
         new_namespace = {
             **attrs,
-            "_info": "info" in attrs
+            "_meta": "meta" in attrs
         }
         if types := attrs.get("types", None):
             new_namespace["types"] = update_types(types, attrs.get("validation"))
@@ -58,19 +58,19 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
     """
     JADN Schema
     """
-    info: Optional[Information] = Field(default_factory=Information)
+    meta: Optional[Metadata] = Field(default_factory=Metadata)
     types: dict = Field(default_factory=dict)  # Dict[str, Definition]
-    _info: bool = PrivateAttr(False)
+    _meta: bool = PrivateAttr(False)
     __formats__: Dict[str, Callable] = ValidationFormats
 
     def __init__(self, **kwargs):
-        if "info" in kwargs and "namespaces" in kwargs["info"]:
-            nms = set(kwargs["info"]["namespaces"])
+        if "meta" in kwargs and "namespaces" in kwargs["meta"]:
+            nms = set(kwargs["meta"]["namespaces"])
         else: 
             nms = None
-        
-        if "info" in kwargs and "config" in kwargs["info"]:
-            DefinitionBase.__config__.info = kwargs["info"]["config"]
+
+        if "meta" in kwargs and "config" in kwargs["meta"]:
+            DefinitionBase.__config__.meta = kwargs["meta"]["config"]
     
         if "types" in kwargs:
             kwargs["types"] = update_types(kwargs["types"], self.__formats__, nms)
@@ -84,8 +84,8 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         :return: JADN formatted schema
         """
         schema = {}
-        if self._info:
-            schema["info"] = self.info.schema()
+        if self._meta:
+            schema["meta"] = self.meta.schema()
         schema.update(types=[d.schema() for d in self.types.values()])
         return schema
 
@@ -96,9 +96,9 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         :param value: data to validate
         :return: validated data as an instance of the exported type
         """
-        if self.info:
-            if self.info.exports:
-                for export in self.info.exports:
+        if self.meta:
+            if self.meta.exports:
+                for export in self.meta.exports:
                     return self.validate_as(export[0], value)
         raise SchemaException("Value is not a valid exported type")
 
@@ -109,8 +109,8 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         :param value: data to validate
         :return: validated data as an instance of the exported type
         """
-        if self.info and self.info.exports:
-            if type_ not in self.info.exports.json():
+        if self.meta and self.meta.exports:
+            if type_ not in self.meta.exports.json():
                 print("Type is not a valid exported definition")
         if cls := self.types.get(type_):
             if isinstance(value, dict) and all(str(k).isdigit() for k in value.keys()):
@@ -122,9 +122,9 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
     @root_validator
     def validate_exports(cls, v):
         invalid_exports=[]
-        #check if info and info.exports exist
-        if v is not None and v.get("info") is not None and v.get("info").get("exports") is not None:
-            if exports := Exports.schema(v.get("info").get("exports")):
+        #check if meta and meta.exports exist
+        if v is not None and v.get("meta") is not None and v.get("meta").get("exports") is not None:
+            if exports := Exports.schema(v.get("meta").get("exports")):
                 for export in exports:
                     if not v.get("types").get(export):
                         invalid_exports.append(export)
@@ -254,8 +254,8 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
             return nsp if nsp in nsids else name
 
         type_deps = self._dependencies()
-        imports = getattr(self.info.namespaces, "value", lambda: {})()
-        exports = getattr(self.info.exports, "value", lambda: [])()
+        imports = getattr(self.meta.namespaces, "value", lambda: {})()
+        exports = getattr(self.meta.exports, "value", lambda: [])()
 
         defs = set(type_deps) | set(imports)
         refs = {ns(r, imports) for d in type_deps.values() for r in d} | set(exports)
@@ -329,5 +329,5 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         """
         schema = self.schema()
         exts = EXTENSIONS.union(extensions) if extensions else EXTENSIONS
-        schema["types"] = unfold_extensions(schema["types"], self.info.config.Sys, exts)
+        schema["types"] = unfold_extensions(schema["types"], self.meta.config.Sys, exts)
         return Schema(**schema)

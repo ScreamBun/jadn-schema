@@ -12,7 +12,7 @@ import ubjson
 import yaml
 
 from typing import Union
-from amazon.ion import simpleion as ion, simple_types as ion_types
+#from amazon.ion import simpleion as ion, simple_types as ion_types
 from . import pybinn, pysmile
 from .enums import SerialFormats
 from .helpers import bencode_encode, bencode_decode, sp_encode, sp_decode, xml_encode, xml_decode
@@ -38,7 +38,7 @@ serializations = FrozenDict(
         cbor=cbor2.dumps,
         edn=edn_format.dumps,
         json=json.dumps,
-        ion=lambda m: ion.dumps(m, binary=True),
+        #ion=lambda m: ion.dumps(m, binary=True),
         msgpack=lambda m: msgpack.packb(m, use_bin_type=True),
         sexp=sp_encode,  # S-Expression
         smile=pysmile.encode,
@@ -54,7 +54,7 @@ serializations = FrozenDict(
         cbor=cbor2.loads,
         edn=edn_format.loads,
         json=json.loads,
-        ion=ion.loads,
+        #ion=ion.loads,
         msgpack=msgpack.unpackb,
         sexp=sp_decode,  # S-Expression
         smile=pysmile.decode,
@@ -69,7 +69,7 @@ extra_decoders = FrozenDict({
     # Builtin Types
     bytes: bytes.decode,
     # Serialization Types
-    ion_types.IonPyDict: dict,
+    #ion_types.IonPyDict: dict,
     edn_format.immutable_dict.ImmutableDict: dict
 })
 

@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 from typing import Any, Callable, Dict, Type, Union
 
-from jadnschema.schema.info import Config
+from jadnschema.schema.meta import Config
 
 
 def addKey(d: dict, k: str = None) -> Callable:
@@ -177,7 +177,7 @@ def get_max_len(cls) -> int:
     config = Config()
     if cls.__options__.maxv is None:
         try:
-            maxProps = cls.__config__.info.get('$MaxString')
+            maxProps = cls.__config__.meta.get('$MaxString')
             
             if maxProps is None:
                 maxProps = config.MaxElements              
@@ -195,7 +195,7 @@ def get_max_len_binary(cls) -> int:
     config = Config()
     if cls.__options__.maxv is None:
         try:
-            maxProps = cls.__config__.info.get('$MaxBinary')
+            maxProps = cls.__config__.meta.get('$MaxBinary')
             
             if maxProps is None:
                 maxProps = config.MaxElements            
@@ -213,7 +213,7 @@ def get_max_v(cls) -> int:
     config = Config()
     if cls.__options__.maxv is None:
         try:
-            maxProps = cls.__config__.info.get('$MaxElements')
+            maxProps = cls.__config__.meta.get('$MaxElements')
             
             if maxProps is None:
                 maxProps = config.MaxElements        

@@ -6,7 +6,7 @@ from typing import Any, ClassVar, Optional, Union
 from pydantic import Extra, root_validator
 from pydantic.utils import GetterDict
 
-from jadnschema.schema.info import Config
+from jadnschema.schema.meta import Config
 from jadnschema.utils.general import get_max_v
 
 from .definitionBase import DefinitionBase, DefinitionMeta

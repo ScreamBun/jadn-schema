@@ -3,11 +3,11 @@ Translate a JADN schema into a PlantUML graph display file
 """
 
 import re
-from datetime import datetime
-from typing import NoReturn
-from jadn.definitions import (TypeName, BaseType, TypeDesc, PRIMITIVE_TYPES,
-                           Fields, FieldID, FieldName, FieldType, FieldOptions, FieldDesc)
-from jadn.utils import ftopts_s2d, multiplicity_str, jadn2fielddef
+#from datetime import datetime
+#from typing import NoReturn
+#from jadn.definitions import (TypeName, BaseType, TypeDesc, PRIMITIVE_TYPES,
+#                           Fields, FieldID, FieldName, FieldType, FieldOptions, FieldDesc)
+#from jadn.utils import ftopts_s2d, multiplicity_str, jadn2fielddef
 
 
 """
@@ -22,18 +22,18 @@ TODO: Eventually remove once the logic below has been verified that it is no lon
 
 # Wrap typenames at word boundaries to minimize node width, using a max of "lines" lines.
 def wrapstr(ss: str, lines: int = 3) -> str:
-    p = 0
-    bp = len(ss)/lines
-    wrapped = ''
-    for m in re.findall(r'([A-Z][a-z0-9]+)|([A-Z]+)|([a-z]+)', ss):  # TODO: update regex to support more word formats
-        w = ''.join(m)
-        if p > 0 and p + len(w)/2 > bp:
-            wrapped += '\\n'
-            bp += len(ss)/lines
-        wrapped += w
-        p += len(w)
-    return wrapped
-
+    #p = 0
+    #bp = len(ss)/lines
+    #wrapped = ''
+    #for m in re.findall(r'([A-Z][a-z0-9]+)|([A-Z]+)|([a-z]+)', ss):  # TODO: update regex to support more word formats
+    #    w = ''.join(m)
+    #    if p > 0 and p + len(w)/2 > bp:
+    #        wrapped += '\\n'
+    #        bp += len(ss)/lines
+    #    wrapped += w
+    #    p += len(w)
+    #return wrapped
+    return None
 
 def plant_style() -> dict:
     # Return default generation options and PlantUML style attributes
@@ -63,7 +63,7 @@ def plant_dumps(schema: dict, style: dict = None) -> str:
         s.update(style)
 
     text = '@startuml\n'
-    for k, v in schema.get('info', {}).items():
+    for k, v in schema.get('meta', {}).items():
         text += f"' {k}: {v}\n"
     text += '\n' + '\n'.join(s.get('header', [])) + '\n\n'
 
@@ -94,7 +94,7 @@ def plant_dumps(schema: dict, style: dict = None) -> str:
     return text + edges + '@enduml'
 
 
-def plant_dump(schema: dict, fname: str, source: str = '', style: dict = None) -> NoReturn:
+def plant_dump(schema: dict, fname: str, source: str = '', style: dict = None):# -> NoReturn:
     with open(fname, 'w') as f:
         if source:
             f.write(f'\' Generated from {source}, {datetime.ctime(datetime.now())}"\n\n')

@@ -56,10 +56,10 @@ class JADNtoProto3(BaseWriter):
                 return f"package {uri_to_revid(info[k])};"
             return f"{self.comment_single} {k:>{FormatStyles.info}}: {json.dumps(v)}"
 
-        info = self._schema.info.schema()
+        meta = self._schema.meta.schema()
         header = "\n".join([
             "syntax = \"proto3\";",
-            *[mkrow(k, v) for k, v in info.items()]
+            *[mkrow(k, v) for k, v in meta.items()]
         ])
 
         return f"{header}\n\n"

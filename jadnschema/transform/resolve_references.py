@@ -12,7 +12,7 @@ def resolve(schema_name: str, schema: dict, schema_list: list) -> list | str:
     print(f'Installed JADN version: {jadn.__version__}\n')
     filename, ext = os.path.splitext(schema_name)
     # get all referenced def
-    references = schema['info']['namespaces'] if 'namespaces' in schema['info'] else {}
+    references = schema['meta']['namespaces'] if 'namespaces' in schema['meta'] else {}
     if len(references) == 0:
         raise ValueError("No references to resolve")
     sc2 = resolve_imports(schema, schema_list, references)        # Resolve referenced definitions

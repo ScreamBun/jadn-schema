@@ -2,7 +2,7 @@
 JADN Schema definition objects
 """
 from pydantic import Field
-from .info import Information
+from .meta import Metadata
 from .schema import Schema
 from .definitions.primitives import Binary, Boolean, Integer, Number, String
 from .definitions.structures import Array, ArrayOf, Choice, Map, Enumerated, MapOf, Record
@@ -10,7 +10,7 @@ from .definitions.structures import Array, ArrayOf, Choice, Map, Enumerated, Map
 
 __all__ = [
     "Schema",
-    "Information",
+    "Metadata",
     # Definitions
     "Binary",
     "Boolean",

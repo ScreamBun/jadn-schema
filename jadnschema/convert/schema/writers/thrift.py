@@ -42,10 +42,10 @@ class JADNtoThrift(BaseWriter):
         :return: header for schema
         """
         header_regex = re.compile(r'(^\"|\"$)')
-        info = self._schema.info.schema()
+        meta = self._schema.meta.schema()
         header = [
             '/*',
-            *[f" * meta: {k} - {header_regex.sub('', json.dumps(v))}" for k, v in info.items()],
+            *[f" * meta: {k} - {header_regex.sub('', json.dumps(v))}" for k, v in meta.items()],
             '*/'
         ]
         return '\n'.join(header) + '\n\n'

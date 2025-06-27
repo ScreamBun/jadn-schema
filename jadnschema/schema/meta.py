@@ -80,7 +80,7 @@ class Config(BaseModel):
         allow_population_by_field_name = True
 
 
-class Information(BaseModel):
+class Metadata(BaseModel):
     package: Optional[str]            #: Unique name/version of this package
     version: Optional[str]            #: Incrementing version within package
     title: Optional[str]              #: Title

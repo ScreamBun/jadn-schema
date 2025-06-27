@@ -59,9 +59,9 @@ class JADNtoRelaxNG(BaseWriter):
 
         with tag("start"):
             with tag("choice"):
-                export_names = self._schema.info.exports.schema()
+                export_names = self._schema.meta.exports.schema()
                 exports = [t.name for t in self._schema.types.values() if t.data_type == "Record" and t.name in export_names]
-                # exports = self._info.exports
+                # exports = self._meta.exports
                 # TODO: What should be here??
                 for e in exports:
                     with tag("element", name="message"):
@@ -77,8 +77,8 @@ class JADNtoRelaxNG(BaseWriter):
         """
         header_regex = re.compile(r"(^\"|\"$)")
         header = []
-        info = self._schema.info.schema()
-        for k, v in info.items():
+        meta = self._schema.meta.schema()
+        for k, v in meta.items():
             header.append(f"<!-- meta: {k} - {header_regex.sub('', json.dumps(v))} -->")
         return "\n".join(header) + "\n"
 

@@ -198,10 +198,10 @@ def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = C
 
     assert len(types) == len(set(types)), f'Type name collision'
 
-    info = {'package': jss['$id']}
-    info.update({'comment': jss['$comment']} if '$comment' in jss else {})
-    info.update({'exports': ['$Root']})
-    info.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
+    meta = {'package': jss['$id']}
+    meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
+    meta.update({'exports': ['$Root']})
+    meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
 
     nt = []     # Walk nested type definition tree to build type list
     
@@ -223,12 +223,12 @@ def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = C
 
     """
     # schema view for debug in terminal
-    print("returning info + types")
-    print(info)
+    print("returning meta + types")
+    print(meta)
     print('---- ----- ---- ---- ----- ---- --- ---- --- -')
     print(ntypes)
     """
-    return {'info': info, 'types': ntypes}
+    return {'meta': meta, 'types': ntypes}
 
     # print('\n'.join([f'{k:>15}: {v}' for k, v in jadn.analyze(jadn.check(schema)).items()]))
 

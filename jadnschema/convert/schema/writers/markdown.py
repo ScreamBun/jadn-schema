@@ -51,9 +51,9 @@ class JADNtoMD(BaseWriter):
                 v = ", ".join(v)
             return [f"**{k}:**", v]
 
-        info = self._schema.info.schema()
+        meta = self._schema.meta.schema()
         meta_table = self._makeTable(
-            rows=[mkrow(k, info[k]) for k, v in info.items()],
+            rows=[mkrow(k, meta[k]) for k, v in meta.items()],
             align=[Alignment.ALIGN_RIGHT],
             headers=[".", "."],
             table=TableFormat.MarkDown

@@ -49,8 +49,8 @@ class JADNtoCDDL(BaseWriter):
                 v = ", ".join([f"**{k}**: {v}" for (k, v) in v] if isinstance(v[0], list) else v) if len(v) > 0 else "N/A"
             return f"{k} - {header_regex.sub('', json.dumps(v))}"
 
-        info = self._schema.info.schema()
-        header = [f"{self.comment_single} meta: {mkrow(k, v)}" for k, v in info.items()]
+        meta = self._schema.meta.schema()
+        header = [f"{self.comment_single} meta: {mkrow(k, v)}" for k, v in meta.items()]
         return "\n".join(header) + "\n\n"
 
     # Structure Formats
