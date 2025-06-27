@@ -37,7 +37,6 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
                     "copyright": {"type": "string"},
                     "license": {"type": "string"},
                     "namespaces": {"$ref": "#/definitions/Namespaces"},
-                    "exports": {"$ref": "#/definitions/Roots"},
                     "roots": {"$ref": "#/definitions/Roots"},
                     "config": {"$ref": "#/definitions/Config"}
                 }

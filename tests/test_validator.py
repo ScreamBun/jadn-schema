@@ -17,7 +17,7 @@ class CommandValidation(TestCase):
     _test_schema = {
                         "info": {
                             "package": "http://test/v1.0",
-                            "exports": ["Record-Test"]
+                            "roots": ["Record-Test"]
                         },
                         "types": [
                             ["String-Test", "String", ["/ipv4"], ""],

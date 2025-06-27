@@ -32,7 +32,7 @@ class BaseWriter:
     comment_single: str = ""
     # Helper Vars
     _schema: Schema
-    _exports: List[str]
+    _roots: List[str]
     _comm: CommentLevels
     _customFields = Dict[str, str]
     # Non Override
@@ -59,7 +59,7 @@ class BaseWriter:
             self._schema = Schema.parse_file(schema)
         else:
             self._schema = Schema.parse_raw(schema)
-        self._exports = getattr(self._schema.meta, "exports", [])
+        self._roots = getattr(self._schema.meta, "roots", [])
         self._comm = comm if comm in CommentLevels else CommentLevels.ALL
         self._customFields = {t.name: t.data_type for t in self._schema.types.values()}
 

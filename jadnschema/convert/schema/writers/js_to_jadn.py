@@ -200,7 +200,7 @@ def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = C
 
     meta = {'package': jss['$id']}
     meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
-    meta.update({'exports': ['$Root']})
+    meta.update({'roots': ['$Root']})
     meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
 
     nt = []     # Walk nested type definition tree to build type list

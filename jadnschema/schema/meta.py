@@ -22,7 +22,7 @@ class Namespaces(BaseModel):
         return self.__root__
 
 
-class Exports(BaseModel):
+class Roots(BaseModel):
     """Type defs intended to be referenced"""
     __root__: List[str]
 
@@ -89,7 +89,7 @@ class Metadata(BaseModel):
     copyright: Optional[str]          #: Copyright notice
     license: Optional[str]            #: SPDX licenseId (e.g., 'CC0-1.0')
     namespaces: Optional[Namespaces]  #: Referenced packages
-    exports:  Optional[Exports]       #: Type defs exported by this package
+    roots:  Optional[Roots]       #: Type defs exported by this package
     config:  Optional[Config]         #: Configuration variables
     _config: bool = PrivateAttr(False)
 

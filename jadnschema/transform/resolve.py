@@ -160,7 +160,7 @@ def resolve_imports(schema: dict, schema_list: list, no_nsid: Tuple[str, ...] = 
             print(f'* Duplicate package {sm.package}, Using: {packages[sm.package].source}, Ignoring: {fn}')
         for i, m in sm.namespaces.items():
             nsids[m].append('' if i in no_nsid else i)
-        resolve(root, root.schema['meta']['exports'] if 'exports' in root.schema['meta'] else set(), packages)
+        resolve(root, root.schema['meta']['roots'] if 'roots' in root.schema['meta'] else set(), packages)
 
     for t in root.used.copy():
         if t[0] in (OPTION_ID['enum'], OPTION_ID['pointer']):

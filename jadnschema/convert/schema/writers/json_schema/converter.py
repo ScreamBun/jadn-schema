@@ -48,8 +48,8 @@ class JADNtoJSON(BaseWriter):
         )
 
         root = kwargs.get("root", JsonRootStyle.Property)
-        exports = self._schema.info.exports.value()
-        for exp in exports:
+        roots = self._schema.info.roots.value()
+        for exp in roots:
             if cls := self._schema.types.get(exp):
                 if root == JsonRootStyle.Property:
                     json_schema.setdefault("properties", {})[cls.name.lower().replace("-", "_")] = {
@@ -62,7 +62,7 @@ class JADNtoJSON(BaseWriter):
                         "description": self._cleanComment(cls.description)
                     })
             else:
-                print(f"Exported name `{exp}` is not a valid type within the schema")
+                print(f"Root name `{exp}` is not a valid type within the schema")
 
         defs = {k: v for d in self._makeStructures(default={}, **kwargs).values() for k, v in d.items()}
         tmp_defs = {k: defs[k] for k in self._definition_order if k in defs}

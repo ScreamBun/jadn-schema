@@ -12,7 +12,7 @@ from pydantic import Field, root_validator
 from pydantic.main import ModelMetaclass, PrivateAttr  # pylint: disable=no-name-in-module
 from .baseModel import BaseModel
 from .consts import EXTENSIONS, OPTION_ID
-from .meta import Exports, Metadata
+from .meta import Roots, Metadata
 from .definitions import DefTypes, Definition, DefinitionBase, make_def
 from .definitions.field import getFieldType
 from .extensions import unfold_extensions
@@ -92,26 +92,26 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
     # Validation
     def validate(self, value: Any) -> Definition:
         """
-        Validate the given data against the exported types
+        Validate the given data against the root types
         :param value: data to validate
-        :return: validated data as an instance of the exported type
+        :return: validated data as an instance of the root type
         """
         if self.meta:
-            if self.meta.exports:
-                for export in self.meta.exports:
-                    return self.validate_as(export[0], value)
-        raise SchemaException("Value is not a valid exported type")
+            if self.meta.roots:
+                for root in self.meta.roots:
+                    return self.validate_as(root[0], value)
+        raise SchemaException("Value is not a valid root type")
 
     def validate_as(self, type_: str, value: Any) -> Definition:
         """
         Validate the given data against a specific type
         :param type_: name of the type
         :param value: data to validate
-        :return: validated data as an instance of the exported type
+        :return: validated data as an instance of the root type
         """
-        if self.meta and self.meta.exports:
-            if type_ not in self.meta.exports.json():
-                print("Type is not a valid exported definition")
+        if self.meta and self.meta.roots:
+            if type_ not in self.meta.roots.json():
+                print("Type is not a valid root definition")
         if cls := self.types.get(type_):
             if isinstance(value, dict) and all(str(k).isdigit() for k in value.keys()):
                 value = cls.expandCompact(value)
@@ -120,17 +120,17 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         raise SchemaException(f"{type_} is not a valid type within the schema")
     
     @root_validator
-    def validate_exports(cls, v):
-        invalid_exports=[]
-        #check if meta and meta.exports exist
-        if v is not None and v.get("meta") is not None and v.get("meta").get("exports") is not None:
-            if exports := Exports.schema(v.get("meta").get("exports")):
-                for export in exports:
-                    if not v.get("types").get(export):
-                        invalid_exports.append(export)
-                if len(invalid_exports) != 0:
-                    raise SchemaException(f"Invalid exports within the schema: {invalid_exports}")  
-        return v          
+    def validate_roots(cls, v):
+        invalid_roots=[]
+        #check if meta and meta.roots exist
+        if v is not None and v.get("meta") is not None and v.get("meta").get("roots") is not None:
+            if roots := Roots.schema(v.get("meta").get("roots")):
+                for root in roots:
+                    if not v.get("types").get(root):
+                        invalid_roots.append(root)
+                if len(invalid_roots) != 0:
+                    raise SchemaException(f"Invalid roots within the schema: {invalid_roots}")
+        return v
     
     @root_validator
     def validate_dependencies(cls, v): # Validate ktype and vtype
@@ -255,10 +255,10 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
 
         type_deps = self._dependencies()
         imports = getattr(self.meta.namespaces, "value", lambda: {})()
-        exports = getattr(self.meta.exports, "value", lambda: [])()
+        roots = getattr(self.meta.roots, "value", lambda: [])()
 
         defs = set(type_deps) | set(imports)
-        refs = {ns(r, imports) for d in type_deps.values() for r in d} | set(exports)
+        refs = {ns(r, imports) for d in type_deps.values() for r in d} | set(roots)
         oids = (OPTION_ID['enum'], OPTION_ID['pointer'])
         refs = {r[1:] if r[0] in oids else r for r in refs}  # Reference base type for derived enums/pointers
         return {

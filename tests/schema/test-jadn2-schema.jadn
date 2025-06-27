@@ -4,7 +4,7 @@
     "version": "0",
     "title": "TestB Language schema with errata",
     "description": "OpenC2 LS version 1.0 + errata",
-    "exports": ["OpenC2-Command", "OpenC2-Response"],
+    "roots": ["OpenC2-Command", "OpenC2-Response"],
     "config": {
       "$Sys": ":",
       "$TypeName": "^[A-Z][-:A-Za-z0-9]{0,31}$",

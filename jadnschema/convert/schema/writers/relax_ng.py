@@ -59,11 +59,11 @@ class JADNtoRelaxNG(BaseWriter):
 
         with tag("start"):
             with tag("choice"):
-                export_names = self._schema.meta.exports.schema()
-                exports = [t.name for t in self._schema.types.values() if t.data_type == "Record" and t.name in export_names]
-                # exports = self._meta.exports
+                root_names = self._schema.meta.roots.schema()
+                roots = [t.name for t in self._schema.types.values() if t.data_type == "Record" and t.name in root_names]
+                # roots = self._meta.roots
                 # TODO: What should be here??
-                for e in exports:
+                for e in roots:
                     with tag("element", name="message"):
                         self._fieldType(e, tag)
 
