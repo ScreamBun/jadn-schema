@@ -113,7 +113,7 @@ def define_jadn_type(tn: str, tv: dict, type_from: str) -> list:
     tdesc = tv.get('description', '')
     fields = []
     if (jstype := tv.get('type', '')) == 'object':
-        basetype = 'Record'
+        coretype = 'Record'
         req = tv.get('required', [])
         for n, (k, v) in enumerate(tv.get('properties', {}).items(), start=1):
             fopts = ['[0'] if k not in req else []
@@ -145,7 +145,7 @@ def define_jadn_type(tn: str, tv: dict, type_from: str) -> list:
                 raise ValueError(f'  empty field type {tn}${k}')
             fields.append(fdef)
     elif (td := tv.get('anyOf', '')) or (td := tv.get('allOf', '')):
-        basetype = 'Choice'
+        coretype = 'Choice'
         # topts = ['<', '∪'] if 'allOf' in tv else ['<']    # TODO: update Choice in JADN library
         # topts = ['∪'] if 'allOf' in tv else []
         for n, v in enumerate(td, start=1):
@@ -154,11 +154,11 @@ def define_jadn_type(tn: str, tv: dict, type_from: str) -> list:
             fdef = [n, f'c{n}', ftype, [], '']
             fields.append(fdef)
     elif td := tv.get('enum', ''):
-        basetype = 'Enumerated'
+        coretype = 'Enumerated'
         for n, v in enumerate(td, start=1):
             fields.append([n, v, ''])
     elif jstype == 'array':     # TODO: process individual items
-        basetype = 'ArrayOf'
+        coretype = 'ArrayOf'
         topts = [f'{{{tv["minItems"]}'] if 'minItems' in tv else []
         topts.append(f'}}{tv["maxItems"]}') if 'maxItems' in tv else []
         ref = jss[type_from].get(jssx.get(tv['items'].get('$ref', ''), ''), {})
@@ -169,11 +169,11 @@ def define_jadn_type(tn: str, tv: dict, type_from: str) -> list:
     elif jstype in ('string', 'integer', 'number', 'boolean'):
         if p := tv.get('pattern', ''):
             topts.append(f'%{p}')
-        basetype = jstype.capitalize()
+        coretype = jstype.capitalize()
     else:
         return []
 
-    return [typedefname(tn, type_from), basetype, topts, tdesc, fields]
+    return [typedefname(tn, type_from), coretype, topts, tdesc, fields]
 
 
 def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = CommentLevels.ALL, **kwargs) -> str:

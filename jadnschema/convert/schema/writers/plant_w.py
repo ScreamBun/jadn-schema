@@ -5,7 +5,7 @@ Translate a JADN schema into a PlantUML graph display file
 import re
 #from datetime import datetime
 #from typing import NoReturn
-#from jadn.definitions import (TypeName, BaseType, TypeDesc, PRIMITIVE_TYPES,
+#from jadn.definitions import (TypeName, coretype, TypeDesc, PRIMITIVE_TYPES,
 #                           Fields, FieldID, FieldName, FieldType, FieldOptions, FieldDesc)
 #from jadn.utils import ftopts_s2d, multiplicity_str, jadn2fielddef
 
@@ -68,11 +68,11 @@ def plant_dumps(schema: dict, style: dict = None) -> str:
     text += '\n' + '\n'.join(s.get('header', [])) + '\n\n'
 
     atypes = (*PRIMITIVE_TYPES, 'Enumerated')
-    nodes = {tdef[TypeName]: k for k, tdef in enumerate(schema['types']) if tdef[BaseType] not in atypes}
+    nodes = {tdef[TypeName]: k for k, tdef in enumerate(schema['types']) if tdef[CoreType] not in atypes}
     edges = ''
     for td in schema['types']:
         if (tn := td[TypeName]) in nodes:
-            text += f'class "{tn}" as n{nodes[tn]} <<{td[BaseType]}>>\n'
+            text += f'class "{tn}" as n{nodes[tn]} <<{td[CoreType]}>>\n'
             for fd in td[Fields]:
                 fopts, ftopts = ftopts_s2d(fd[FieldOptions])
                 fieldtype = ftopts['vtype'] if fd[FieldType] == 'MapOf' else fd[FieldType]

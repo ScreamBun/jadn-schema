@@ -49,7 +49,7 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
                 "maxItems": 5,
                 "items": [
                 {"$ref": "#/definitions/TypeName"},
-                {"$ref": "#/definitions/BaseType"},
+                {"$ref": "#/definitions/CoreType"},
                 {"$ref": "#/definitions/Options"},
                 {"$ref": "#/definitions/Description"},
                 {"$ref": "#/definitions/Fields"}
@@ -146,7 +146,7 @@ def validate_schema_jadn_syntax(schema: dict)-> tuple[bool, str]:
             "FieldName": {
             "type": "string"
             },
-            "BaseType": {
+            "CoreType": {
             "type": "string",
             "enum": ["Binary", "Boolean", "Integer", "Number", "String",
                     "Enumerated", "Choice",
