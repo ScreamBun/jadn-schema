@@ -4,7 +4,8 @@ def validate_schema(schema: dict)-> tuple[bool, str]:
     #TODO: Allow the ability to chose different Draft Validator versions
 
     try:
-        Draft202012Validator.check_schema(schema)  # NOTE: Keep an eye on this, we had to roll back to 2019 due to issues with 2020
+        # Draft202012Validator.check_schema(schema) 
+        Draft201909Validator.check_schema(schema)  # NOTE: Rolled back to 2019 due to issues with 2020
         return True, "Schema is Valid"
 
     except ValidationError as e:
