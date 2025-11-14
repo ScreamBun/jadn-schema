@@ -182,19 +182,31 @@ def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = C
     """
     
     global jss
-    types_from = ['properties']
+    types_from = []
     if isinstance(schema, str):
         jss = json.loads(schema)
     else:
         jss = schema    
     
+    # Only add sections that exist
+    if jss.get('properties'): types_from.append('properties')
+    if jss.get('definitions'): types_from.append('definitions')
+    if jss.get('$defs'): types_from.append('$defs')
+    
     global jssx
-    if (jss.get('definitions')): types_from.append('definitions')
-    if (jss.get('$defs')): types_from.append('$defs')
+    types = {}
 
     for i in range(len(types_from)):
-        jssx = {v.get('$id', k): k for k, v in (jss[(types_from[i])].items())}      # Index from $id to definition
-        types = {typedefname(k, types_from[i]): v for k, v in jss[types_from[i]].items()}      # Index from type name to definition
+        # Index from $id to definition - broken down for easier debugging
+        current_types_section = jss[types_from[i]]
+        jssx = {}
+        for k, v in current_types_section.items():
+            id_key = v.get('$id', k) if isinstance(v, dict) else k
+            jssx[id_key] = k
+        
+        # Index from type name to definition
+        section_types = {typedefname(k, types_from[i]): v for k, v in jss[types_from[i]].items()}
+        types.update(section_types)
 
     assert len(types) == len(set(types)), f'Type name collision'
 
