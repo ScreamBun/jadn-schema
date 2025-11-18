@@ -3,8 +3,20 @@ Test JADN Schema Conversions - JSON Schema to JADN
 Test for json_to_jadn_dumps function
 """
 import json
+import os
 from unittest import TestCase
 from jadnschema.convert.schema.writers.js_to_jadn import json_to_jadn_dumps
+
+
+def load_schema_file(filename):
+    """Load a schema file from the test schema directory"""
+    # Get the directory path of the current test file
+    dir_path = os.path.abspath(os.path.dirname(__file__))
+    schema_file_path = os.path.join(dir_path, 'schema', filename)
+    
+    # Read the schema file
+    with open(schema_file_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
 
 class TestJSONToJADN(TestCase):
@@ -12,10 +24,10 @@ class TestJSONToJADN(TestCase):
 
     def setUp(self):
         """Set up test data"""
-        self.music_library_schema_str = '{"$schema": "http://json-schema.org/draft-07/schema#", "$id": "http://fake-audio.org/music-lib", "title": "Music Library", "version": "1.1", "description": "This information model defines a library of audio tracks, organized by album, with associated metadata regarding each track. It is modeled on the types of library data maintained by common websites and music file tag editors.", "license": "CC0-1.0", "$ref": "#/definitions/Library", "definitions": {"Library": {"title": "Library", "type": "object", "description": "Top level of the library is a map of CDs by barcode", "additionalProperties": false, "minProperties": 1, "maxProperties": 255, "properties": {"Barcode": {"$ref": "#/definitions/Barcode"}, "Album": {"$ref": "#/definitions/Album"}}}, "Barcode": {"title": "Barcode", "type": "string", "description": "A UPC-A barcode is 12 digits", "maxLength": 255, "pattern": "^\\\\d{12}$"}, "Album": {"title": "Album", "type": "object", "description": "model for the album", "additionalProperties": false, "required": ["album_artist", "album_title", "pub_data", "tracks", "total_tracks"], "maxProperties": 255, "properties": {"album_artist": {"$ref": "#/definitions/Artist", "description": "primary artist associated with this album"}, "album_title": {"type": "string", "description": "publisher\'s title for this album", "maxLength": 255}, "pub_data": {"$ref": "#/definitions/Publication-Data", "description": "metadata about the album\'s publication"}, "tracks": {"type": "array", "description": "individual track descriptions and content", "minItems": 1, "items": {"$ref": "#/definitions/Track", "description": "individual track descriptions and content"}}, "total_tracks": {"type": "integer", "description": "total track count"}, "cover_art": {"$ref": "#/definitions/Image", "description": "cover art image for this album"}}}, "Publication-Data": {"title": "Publication Data", "type": "object", "description": "who and when of publication", "additionalProperties": false, "required": ["publisher", "release_date"], "maxProperties": 255, "properties": {"publisher": {"type": "string", "description": "record label that released this album", "maxLength": 255}, "release_date": {"type": "string", "description": "and when did they let this drop", "format": "date", "maxLength": 255}}}, "Image": {"title": "Image", "type": "object", "description": "pretty picture for the album or track", "additionalProperties": false, "required": ["image_format", "image_content"], "maxProperties": 255, "properties": {"image_format": {"$ref": "#/definitions/Image-Format", "description": "what type of image file?"}, "image_content": {"type": "string", "description": "the image data in the identified format", "contentEncoding": "base64url"}}}, "Image-Format": {"title": "Image Format", "type": "string", "description": "can only be one, but can extend list", "enum": ["PNG", "JPG", "GIF"]}, "Artist": {"title": "Artist", "type": "object", "description": "interesting information about a performer", "additionalProperties": false, "required": ["artist_name", "instruments"], "maxProperties": 255, "properties": {"artist_name": {"type": "string", "description": "who is this person", "maxLength": 255}, "instruments": {"type": "array", "description": "and what do they play", "uniqueItems": true, "minItems": 1, "items": {"$ref": "#/definitions/Instrument", "description": "and what do they play"}}}}, "Instrument": {"title": "Instrument", "type": "string", "description": "collection of instruments (non-exhaustive)", "enum": ["vocals", "guitar", "bass", "drums", "keyboards", "percussion", "brass", "woodwinds", "harmonica"]}, "Track": {"title": "Track", "type": "object", "description": "for each track there\'s a file with the audio and a metadata record", "additionalProperties": false, "required": ["location", "metadata"], "maxProperties": 255, "properties": {"location": {"$ref": "#/definitions/File-Path", "description": "path to the audio file location in local storage"}, "metadata": {"$ref": "#/definitions/Track-Info", "description": "description of the track"}}}, "Track-Info": {"title": "Track Info", "type": "object", "description": "information about the individual audio tracks", "additionalProperties": false, "required": ["track_number", "title", "length", "audio_format", "genre"], "maxProperties": 255, "properties": {"track_number": {"type": "integer", "description": "track sequence number"}, "title": {"type": "string", "description": "track title", "maxLength": 255}, "length": {"type": "integer", "description": "length of track in seconds; anticipated user display is mm:ss; minimum length is 1 second"}, "audio_format": {"$ref": "#/definitions/Audio-Format", "description": "format of the digital audio"}, "featured_artist": {"type": "array", "description": "notable guest performers", "uniqueItems": true, "minItems": 1, "items": {"$ref": "#/definitions/Artist", "description": "notable guest performers"}}, "track_art": {"$ref": "#/definitions/Image", "description": "each track can have optionally have individual artwork"}, "genre": {"$ref": "#/definitions/Genre", "description": ""}}}, "Audio-Format": {"title": "Audio Format", "type": "string", "description": "can only be one, but can extend list", "enum": ["MP3", "OGG", "FLAC", "MP4", "AAC", "WMA", "WAV"]}, "Genre": {"title": "Genre", "type": "string", "description": "Enumeration of common genres", "enum": ["rock", "jazz", "hip_hop", "electronic", "folk_country_world", "classical", "spoken_word"]}, "File-Path": {"title": "File Path", "type": "string", "description": "local storage location of file with directory path from root, filename, and extension", "maxLength": 255}}}'
+        self.music_library_schema_dict = load_schema_file('music_lib.json')
         
-        # Also prepare as dict for testing both input formats
-        self.music_library_schema_dict = json.loads(self.music_library_schema_str)
+        # Also prepare as string for testing both input formats
+        self.music_library_schema_str = json.dumps(self.music_library_schema_dict)
 
     def test_json_to_jadn_dumps_with_string_input(self):
         """Test json_to_jadn_dumps with JSON string input"""
@@ -31,7 +43,7 @@ class TestJSONToJADN(TestCase):
         self.assertIsInstance(meta, dict)
         self.assertEqual(meta['package'], 'http://fake-audio.org/music-lib')
         self.assertIn('roots', meta)
-        self.assertEqual(meta['roots'], ['$Root'])
+        self.assertEqual(meta['roots'], ['Library'])  # Should extract from $ref
         self.assertIn('config', meta)
         
         # Check types structure
@@ -167,6 +179,46 @@ class TestJSONToJADN(TestCase):
         meta = result['meta']
         
         self.assertEqual(meta['package'], 'http://test.example.com/my-custom-schema')
+
+    def test_json_to_jadn_dumps_extracts_root_from_ref(self):
+        """Test that root type is correctly extracted from $ref field"""
+        # Test with definitions reference
+        schema_with_def_ref = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/test",
+            "$ref": "#/definitions/MyRoot",
+            "definitions": {
+                "MyRoot": {"type": "object"}
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_with_def_ref)
+        self.assertEqual(result['meta']['roots'], ['MyRoot'])
+        
+        # Test with $defs reference
+        schema_with_defs_ref = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/test2",
+            "$ref": "#/$defs/Person",
+            "$defs": {
+                "Person": {"type": "object"}
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_with_defs_ref)
+        self.assertEqual(result['meta']['roots'], ['Person'])
+        
+        # Test without $ref (should default to $Root)
+        schema_without_ref = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/test3",
+            "definitions": {
+                "SomeType": {"type": "object"}
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_without_ref)
+        self.assertEqual(result['meta']['roots'], ['$Root'])
 
 
 if __name__ == '__main__':

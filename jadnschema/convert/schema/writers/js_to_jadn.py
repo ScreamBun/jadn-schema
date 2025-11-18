@@ -210,9 +210,22 @@ def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = C
 
     assert len(types) == len(set(types)), f'Type name collision'
 
+    # Extract root type from $ref field, default to '$Root' if not found
+    root_type = '$Root'
+    if '$ref' in jss:
+        ref_value = jss['$ref']
+        # Extract type name from reference like "#/definitions/Library" or "#/$defs/Library"
+        if ref_value.startswith('#/definitions/'):
+            root_type = ref_value.replace('#/definitions/', '')
+        elif ref_value.startswith('#/$defs/'):
+            root_type = ref_value.replace('#/$defs/', '')
+        elif ref_value.startswith('#/'):
+            # Handle other reference patterns
+            root_type = ref_value.split('/')[-1]
+
     meta = {'package': jss['$id']}
     meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
-    meta.update({'roots': ['$Root']})
+    meta.update({'roots': [root_type]})
     meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
 
     nt = []     # Walk nested type definition tree to build type list
