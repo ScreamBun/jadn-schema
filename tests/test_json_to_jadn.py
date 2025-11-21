@@ -44,7 +44,6 @@ class TestJSONToJADN(TestCase):
         self.assertEqual(meta['package'], 'http://fake-audio.org/music-lib')
         self.assertIn('roots', meta)
         self.assertEqual(meta['roots'], ['Library'])  # Should extract from $ref
-        self.assertIn('config', meta)
         
         # Check types structure
         types = result['types']
@@ -73,13 +72,9 @@ class TestJSONToJADN(TestCase):
         # Required fields
         self.assertIn('package', meta)
         self.assertIn('roots', meta)
-        self.assertIn('config', meta)
         
-        # Check config contains expected JADN configuration
-        config = meta['config']
-        self.assertIn('$MaxString', config)
-        self.assertIn('$FieldName', config)
-        self.assertEqual(config['$MaxString'], 1000)
+        # Config is optional - only present if in source schema
+        # The music library schema doesn't have a config section
         
     def test_json_to_jadn_dumps_processes_definitions(self):
         """Test that the function processes definitions from JSON Schema"""
@@ -208,7 +203,7 @@ class TestJSONToJADN(TestCase):
         result = json_to_jadn_dumps(schema_with_defs_ref)
         self.assertEqual(result['meta']['roots'], ['Person'])
         
-        # Test without $ref (should default to $Root)
+        # Test without $ref (should collect all definition names as roots)
         schema_without_ref = {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "$id": "http://example.org/test3",
@@ -218,7 +213,211 @@ class TestJSONToJADN(TestCase):
         }
         
         result = json_to_jadn_dumps(schema_without_ref)
-        self.assertEqual(result['meta']['roots'], ['$Root'])
+        self.assertEqual(result['meta']['roots'], ['SomeType'])
+
+    def test_json_to_jadn_dumps_handles_multiple_definitions_as_roots(self):
+        """Test that multiple definitions without $ref are all included as roots"""
+        schema_multiple_defs = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/multi-roots",
+            "definitions": {
+                "TypeA": {"type": "string"},
+                "TypeB": {"type": "integer"},
+                "TypeC": {"type": "object", "properties": {"name": {"type": "string"}}}
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_multiple_defs)
+        roots = result['meta']['roots']
+        
+        # Should contain all three types as roots
+        self.assertEqual(len(roots), 3)
+        self.assertIn('TypeA', roots)
+        self.assertIn('TypeB', roots)
+        self.assertIn('TypeC', roots)
+
+    def test_json_to_jadn_dumps_mixed_sections_as_roots(self):
+        """Test that types from both definitions and $defs are included as roots"""
+        schema_mixed = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/mixed",
+            "definitions": {
+                "DefType": {"type": "string"}
+            },
+            "$defs": {
+                "DefsType": {"type": "integer"}
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_mixed)
+        roots = result['meta']['roots']
+        
+        # Should contain types from both sections
+        self.assertEqual(len(roots), 2)
+        self.assertIn('DefType', roots)
+        self.assertIn('DefsType', roots)
+
+    def test_multiple_root_definitions_comprehensive(self):
+        """Comprehensive test for multiple root level definitions logic"""
+        
+        # Test 1: Schema with only definitions section (multiple types)
+        schema_only_definitions = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/definitions-only",
+            "definitions": {
+                "User": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "string"},
+                        "name": {"type": "string"}
+                    }
+                },
+                "Product": {
+                    "type": "object", 
+                    "properties": {
+                        "sku": {"type": "string"},
+                        "price": {"type": "number"}
+                    }
+                },
+                "Order": {
+                    "type": "object",
+                    "properties": {
+                        "orderId": {"type": "string"},
+                        "items": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
+                    }
+                }
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_only_definitions)
+        roots = result['meta']['roots']
+        
+        # Should have all three types as roots
+        self.assertEqual(len(roots), 3)
+        self.assertIn('User', roots)
+        self.assertIn('Product', roots)
+        self.assertIn('Order', roots)
+        
+        # Test 2: Schema with only $defs section (multiple types)
+        schema_only_defs = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/defs-only",
+            "$defs": {
+                "Customer": {"type": "object"},
+                "Invoice": {"type": "object"},
+                "Payment": {"type": "object"}
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_only_defs)
+        roots = result['meta']['roots']
+        
+        # Should have all three types as roots
+        self.assertEqual(len(roots), 3)
+        self.assertIn('Customer', roots)
+        self.assertIn('Invoice', roots)
+        self.assertIn('Payment', roots)
+        
+        # Test 3: Schema with both definitions and $defs (comprehensive)
+        schema_both_sections = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/both-sections",
+            "definitions": {
+                "TypeFromDefs": {"type": "string"},
+                "AnotherDefType": {"type": "integer"}
+            },
+            "$defs": {
+                "TypeFromDollarDefs": {"type": "boolean"},
+                "YetAnotherType": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_both_sections)
+        roots = result['meta']['roots']
+        
+        # Should have all four types as roots
+        self.assertEqual(len(roots), 4)
+        self.assertIn('TypeFromDefs', roots)
+        self.assertIn('AnotherDefType', roots)
+        self.assertIn('TypeFromDollarDefs', roots)
+        self.assertIn('YetAnotherType', roots)
+        
+        # Test 4: Schema with $ref should NOT use multiple roots logic (single root)
+        schema_with_ref = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/with-ref",
+            "$ref": "#/definitions/MainType",
+            "definitions": {
+                "MainType": {"type": "object"},
+                "HelperType": {"type": "string"},
+                "AnotherHelper": {"type": "integer"}
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_with_ref)
+        roots = result['meta']['roots']
+        
+        # Should have only one root (from $ref), not all definitions
+        self.assertEqual(len(roots), 1)
+        self.assertEqual(roots[0], 'MainType')
+        
+        # Test 5: Schema with no definitions/defs sections
+        schema_no_defs = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/no-defs",
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"}
+            }
+        }
+        
+        result = json_to_jadn_dumps(schema_no_defs)
+        roots = result['meta']['roots']
+        
+        # Should have a single default root type when no definitions exist
+        self.assertEqual(len(roots), 1)
+
+    def test_config_only_included_when_present_in_source(self):
+        """Test that config is only included in output when present in source schema"""
+        
+        # Test 1: Schema without config should not include config in output
+        schema_no_config = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/no-config",
+            "definitions": {
+                "TestType": {"type": "string"}
+            }
+        }
+        
+        result1 = json_to_jadn_dumps(schema_no_config)
+        self.assertNotIn('config', result1['meta'])
+        self.assertIn('package', result1['meta'])
+        self.assertIn('roots', result1['meta'])
+        
+        # Test 2: Schema with config should include config in output
+        schema_with_config = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "http://example.org/with-config",
+            "config": {
+                "$MaxString": 500,
+                "$FieldName": "^[a-zA-Z][a-zA-Z0-9_]*$",
+                "customSetting": "enabled"
+            },
+            "definitions": {
+                "TestType": {"type": "string"}
+            }
+        }
+        
+        result2 = json_to_jadn_dumps(schema_with_config)
+        self.assertIn('config', result2['meta'])
+        self.assertEqual(result2['meta']['config']['$MaxString'], 500)
+        self.assertEqual(result2['meta']['config']['customSetting'], 'enabled')
 
 
 if __name__ == '__main__':

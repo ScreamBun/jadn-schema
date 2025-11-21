@@ -210,23 +210,38 @@ def json_to_jadn_dumps(schema: Union[str, dict, Schema], comm: CommentLevels = C
 
     assert len(types) == len(set(types)), f'Type name collision'
 
-    # Extract root type from $ref field, default to '$Root' if not found
-    root_type = '$Root'
+    # Extract root type from $ref field or handle multiple definitions
+    root_types = []
+    
     if '$ref' in jss:
         ref_value = jss['$ref']
         # Extract type name from reference like "#/definitions/Library" or "#/$defs/Library"
         if ref_value.startswith('#/definitions/'):
-            root_type = ref_value.replace('#/definitions/', '')
+            root_types.append(ref_value.replace('#/definitions/', ''))
         elif ref_value.startswith('#/$defs/'):
-            root_type = ref_value.replace('#/$defs/', '')
+            root_types.append(ref_value.replace('#/$defs/', ''))
         elif ref_value.startswith('#/'):
             # Handle other reference patterns
-            root_type = ref_value.split('/')[-1]
+            root_types.append(ref_value.split('/')[-1])
+    else:
+        # If no $ref, collect type definitions as roots (prioritize definitions and $defs over properties)
+        # Only include actual type definitions, not property references
+        definition_sections = ['definitions', '$defs']
+        for section in definition_sections:
+            if section in jss and section in types_from:
+                root_types.extend(list(jss[section].keys()))
+        
+        # If no definitions found, fall back to properties section
+        if not root_types and 'properties' in types_from:
+            root_types.extend(list(jss['properties'].keys()))
 
     meta = {'package': jss['$id']}
     meta.update({'comment': jss['$comment']} if '$comment' in jss else {})
-    meta.update({'roots': [root_type]})
-    meta.update({'config': {'$MaxString': 1000, '$FieldName': '^[$a-z][-_$A-Za-z0-9]{0,63}$'}})
+    # Use collected root types, or default to '$Root' if none found
+    meta.update({'roots': root_types if root_types else ['$Root']})
+    # Only include config if it exists in the source JSON Schema
+    if 'config' in jss:
+        meta.update({'config': jss['config']})
 
     nt = []     # Walk nested type definition tree to build type list
     
