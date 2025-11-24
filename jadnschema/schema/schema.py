@@ -78,15 +78,17 @@ class Schema(BaseModel, metaclass=SchemaMeta):  # pylint: disable=invalid-metacl
         DefinitionBase.__config__.types = self.types
 
     # Pydantic Overrides
-    def schema(self) -> Dict[str, Any]:
+    def schema(self, strip_comments: bool = False, comment_width: int = 0) -> Dict[str, Any]:
         """
         Format this schema into valid JADN format
+        :param strip_comments: if True, remove all comments/descriptions
+        :param comment_width: if > 0, truncate comments to this width (adds '..' suffix)
         :return: JADN formatted schema
         """
         schema = {}
         if self._meta:
             schema["meta"] = self.meta.schema()
-        schema.update(types=[d.schema() for d in self.types.values()])
+        schema.update(types=[d.schema(strip_comments=strip_comments, comment_width=comment_width) for d in self.types.values()])
         return schema
 
     # Validation

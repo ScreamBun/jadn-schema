@@ -27,10 +27,12 @@ def getFieldType(field: ModelField) -> str:
     return getattr(ref, "name", ref)
 
 
-def getFieldSchema(field: ModelField) -> list:
+def getFieldSchema(field: ModelField, strip_comments: bool = False, comment_width: int = 0) -> list:
     """
     Format the definition to valid JADN schema format
     :param field: field to get the JADN schema
+    :param strip_comments: if True, remove all comments/descriptions
+    :param comment_width: if > 0, truncate comments to this width (adds '..' suffix)
     :return: formatted JADN
     """
     field_extra = field.field_info.extra
@@ -41,7 +43,14 @@ def getFieldSchema(field: ModelField) -> list:
         opts = field_extra.get("options")
         schema.append(getFieldType(field))
         schema.append(opts.schema())
-    schema.append(field.field_info.description or "")
+    
+    description = field.field_info.description or ""
+    if strip_comments:
+        description = ""
+    elif comment_width > 0 and len(description) > comment_width:
+        description = description[:comment_width - 2] + ".."
+    
+    schema.append(description)
     return schema
 
 

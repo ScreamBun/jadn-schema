@@ -3,10 +3,10 @@ Test JADN Codec
 """
 import binascii
 import json
+import jadn
 
 from collections import Counter
 from unittest import TestCase
-from jadnschema import jadn
 
 
 # Encode and decode data to verify that numeric object keys work properly when JSON converts them to strings
@@ -16,7 +16,10 @@ def _j(data):
 
 class BasicTypes(TestCase):
     schema = {                # JADN schema for datatypes used in Basic Types tests
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['T-bool', 'Boolean', [], ''],
             ['T-int', 'Integer', [], ''],
             ['T-num', 'Number', [], ''],
@@ -763,7 +766,10 @@ class BasicTypes(TestCase):
 
 class Compound(TestCase):  # TODO: arrayOf(rec,map,array,arrayof,choice), array(), map(), rec()
     schema = {
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['T-choice', 'Choice', [], '', [
                 [10, 'rec', 'T-crec', [], ''],
                 [11, 'map', 'T-cmap', [], ''],
@@ -809,7 +815,10 @@ class Compound(TestCase):  # TODO: arrayOf(rec,map,array,arrayof,choice), array(
 class Selectors(TestCase):         # TODO: bad schema - verify * field has only Choice type
                                    # TODO: add test cases to decode multiple values for Choice (bad)
     schema = {  # JADN schema for selector tests
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['T-attr-arr-tag', 'Array', [], '', [
                 [1, 'type', 'Enumerated', ['#MenuId', '='], ''],    # ID not propogated from MenuId
                 [2, 'value', 'MenuId', ['&1'], '']
@@ -1080,7 +1089,10 @@ class Selectors(TestCase):         # TODO: bad schema - verify * field has only 
 
 class ListCardinality(TestCase):      # TODO: arrayOf(rec,map,array,arrayof,choice), array(), map(), rec()
     schema = {  # JADN schema for fields with cardinality > 1 (e.g., list of x)
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['T-array0', 'ArrayOf', ['*String', '}2'], ''],         # Min array length = 0 (default), Max = 2
             ['T-array1', 'ArrayOf', ['*String', '{1', '}2'], ''],   # Min array length = 1, Max = 2
             ['T-opt-list0', 'Record', [], '', [
@@ -1243,7 +1255,10 @@ class ListCardinality(TestCase):      # TODO: arrayOf(rec,map,array,arrayof,choi
 
 class ListTypes(TestCase):
     schema = {
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['T-list', 'ArrayOf', ['*T-list-structures'], ''],
             ['T-list-structures', 'Record', [], '', [
                 [1, 'bins', 'Binary', ['[0', ']2'], ''],
@@ -1312,10 +1327,13 @@ class ListTypes(TestCase):
 class Bounds(TestCase):     # TODO: check max and min string length, integer and number values, array sizes
                             # TODO: Schema default and options
     schema = {
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['Int', 'Integer', [], ''],
             ['Num', 'Number', [], ''],
-            ['Int-3-6', 'Integer', ['{3', '}6'], ''],
+            ['Int-3-6', 'Integer', ['y3', 'z6'], ''],
             ['Num-3-6', 'Number', ['y3.0', 'z6.0'], '']
         ]
     }
@@ -1364,7 +1382,10 @@ class Bounds(TestCase):     # TODO: check max and min string length, integer and
 
 class Format(TestCase):
     schema = {                          # JADN schema for value constraint tests
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['IPv4-Bin', 'Binary', ['{4', '}4'], ''],  # Check length = 32 bits with format function
             ['IPv4-Hex', 'Binary', ['{4', '}4', '/X'], ''],  # Check length = 32 bits with min/max size
             ['IPv4-String', 'Binary', ['{4', '}4', '/ipv4-addr'], ''],

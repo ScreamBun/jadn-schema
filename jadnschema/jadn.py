@@ -111,10 +111,14 @@ def strip(schema: dict, width: int = 0) -> dict:
     Strip/Truncate comments from schema
     :param schema: schema to strip comments
     :param width: max length of comment
-        - length <= 0 will leave all comment unless strip is True
+        - length <= 0 will strip all comments
+        - length > 0 will truncate comments to this width
     :return: comment stripped JADN schema
     """
-    return Schema.parse_obj(schema).schema()
+    if width <= 0:
+        return Schema.parse_obj(schema).schema(strip_comments=True, comment_width=0)
+    else:
+        return Schema.parse_obj(schema).schema(strip_comments=False, comment_width=width)
 
 
 def unfold_extensions(schema: dict, extensions: Set[str] = None) -> Schema:

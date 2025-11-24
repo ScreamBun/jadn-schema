@@ -58,17 +58,25 @@ class DefinitionBase(BaseModel, metaclass=DefinitionMeta):  # pylint: disable=in
 
     # Pydantic overrides
     @classmethod
-    def schema(cls) -> list:
+    def schema(cls, strip_comments: bool = False, comment_width: int = 0) -> list:
         """
         Format the definition to valid JADN schema format
+        :param strip_comments: if True, remove all comments/descriptions
+        :param comment_width: if > 0, truncate comments to this width (adds '..' suffix)
         :return: formatted JADN
         """
         mro = [c for c in cls.__mro__ if not c.__name__ == cls.__name__][0]
-        schema = [cls.name, mro.__name__, cls.__options__.schema(), (cls.__doc__ or "").strip()]
+        description = (cls.__doc__ or "").strip()
+        if strip_comments:
+            description = ""
+        elif comment_width > 0 and len(description) > comment_width:
+            description = description[:comment_width - 2] + ".."
+        
+        schema = [cls.name, mro.__name__, cls.__options__.schema(), description]
         if cls.__fields__ and "__root__" not in cls.__fields__:
             fields = []
             for opt in cls.__fields__.values():
-                fields.append(getFieldSchema(opt))
+                fields.append(getFieldSchema(opt, strip_comments=strip_comments, comment_width=comment_width))
             schema.append(fields)
         return schema
 

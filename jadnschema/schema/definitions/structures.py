@@ -232,10 +232,24 @@ class Enumerated(DefinitionBase, metaclass=EnumeratedMeta):  # pylint: disable=i
 
     # Pydantic overrides
     @classmethod
-    def schema(cls) -> list:
+    def schema(cls, strip_comments: bool = False, comment_width: int = 0) -> list:
         mro = [c for c in cls.__mro__ if not c.__name__ == cls.__name__][0]
-        return [cls.name, mro.__name__, cls.__options__.schema(), (cls.__doc__ or "").strip(),
-                [[v.value.extra["id"], v.value.default, v.value.description or ""] for v in cls.__enums__]]
+        description = (cls.__doc__ or "").strip()
+        if strip_comments:
+            description = ""
+        elif comment_width > 0 and len(description) > comment_width:
+            description = description[:comment_width - 2] + ".."
+        
+        enum_items = []
+        for v in cls.__enums__:
+            item_desc = v.value.description or ""
+            if strip_comments:
+                item_desc = ""
+            elif comment_width > 0 and len(item_desc) > comment_width:
+                item_desc = item_desc[:comment_width - 2] + ".."
+            enum_items.append([v.value.extra["id"], v.value.default, item_desc])
+        
+        return [cls.name, mro.__name__, cls.__options__.schema(), description, enum_items]
 
     # Validation
     @root_validator(pre=True)

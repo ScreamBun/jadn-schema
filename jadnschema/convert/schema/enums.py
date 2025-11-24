@@ -8,7 +8,6 @@ from ...utils import EnumBase
 class SchemaFormats(str, EnumBase):
     """Valid Schema Formats for conversion"""
     # CDDL = "cddl"      #: Convert to [CDDL Format](https://www.rfc-editor.org/rfc/rfc8610)
-    GraphViz = "gv"    #: Convert to [GraphViz Format](https://graphviz.org/doc/info/lang.html)
     HTML = "html"      #: Convert to HTML Format
     JIDL = "jidl"      #: Convert to [JIDL Format]()
     JADN = "jadn"      #: Convert to [JADN Format](https://docs.oasis-open.org/openc2/jadn/v1.0/csd01/jadn-v1.0-csd01.html)
@@ -24,7 +23,6 @@ class SchemaFormats(str, EnumBase):
 class SchemaVisualizationFormats(str, EnumBase):
     """Valid Schema Formats for conversion/visualization"""
     # CDDL = "cddl"      #: Convert to [CDDL Format](https://www.rfc-editor.org/rfc/rfc8610)
-    GraphViz = "gv"    #: Convert to [GraphViz Format](https://graphviz.org/doc/info/lang.html)
     HTML = "html"      #: Convert to HTML Format
     JIDL = "jidl"      #: Convert to [JIDL Format]()
     # JAS = "jas"        #: Convert to [JAS Format]()

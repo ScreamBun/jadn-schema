@@ -15,29 +15,38 @@ class Resolve(TestCase):
 
 class StripComments(TestCase):
     schema = {
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['Person', 'Record', [], 'JADN equivalent of structure from https://developers.google.com/protocol-buffers', [
                 [1, 'name', 'String', [], 'The person\'s name.'],
                 [2, 'id', 'Integer', [], 'A person\'s unique id'],
-                [3, 'email', 'String', ['[0', '/email'], 'An email address for the person.']
+                [3, 'email', 'String', ['/email', '[0'], 'An email address for the person.']
             ]]
         ]
     }
     stripped_schema = {
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['Person', 'Record', [], '', [
                 [1, 'name', 'String', [], ''],
                 [2, 'id', 'Integer', [], ''],
-                [3, 'email', 'String', ['[0', '/email'], '']
+                [3, 'email', 'String', ['/email', '[0'], '']
             ]]
         ]
     }
     trunc20_schema = {
-        'structures': [
+        'meta': {
+            'package': 'http://example.com/test'
+        },
+        'types': [
             ['Person', 'Record', [], 'JADN equivalent of..', [
                 [1, 'name', 'String', [], 'The person\'s name.'],
                 [2, 'id', 'Integer', [], 'A person\'s unique id'],
-                [3, 'email', 'String', ['[0', '/email'], 'An email address f..']
+                [3, 'email', 'String', ['/email', '[0'], 'An email address f..']
             ]]
         ]
     }
@@ -46,13 +55,13 @@ class StripComments(TestCase):
         jadn.check(self.schema)
         jadn.check(self.stripped_schema)
         ss = jadn.strip(self.schema)
-        self.assertEqual(ss['structures'], self.stripped_schema['structures'])
+        self.assertEqual(ss['types'], self.stripped_schema['types'])
 
     def test_truncate_comments(self):
         jadn.check(self.schema)
         jadn.check(self.trunc20_schema)
         ss = jadn.strip(self.schema, width=20)
-        self.assertEqual(ss['structures'], self.trunc20_schema['structures'])
+        self.assertEqual(ss['types'], self.trunc20_schema['types'])
 
 
 class UnfoldExtensions(TestCase):
