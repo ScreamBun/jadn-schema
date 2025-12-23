@@ -1,17 +1,49 @@
-"""
-Test JADN Schema transformations
-Transformation -> Reduce Complexity
-"""
 from unittest import TestCase, skip
 from jadnschema import jadn
 from jadnschema.schema.consts import EXTENSIONS
 
 
 class Resolve(TestCase):
-    schema = {}  # TODO: test Merge imported definitions
+    
+    def test_resolve(self):
+        # Define schema1 with a namespace and types
+        schema1 = {
+            "meta": {
+                "package": "http://example.com/schema1"
+            },
+            "types": [
+                ["Person", "Record", [], "A person record", [
+                    [1, "name", "String", [], "The person's name."]
+                ]]
+            ]
+        }
 
-    # def test_resolve(self):
+        # Define schema2 that references schema1 using the namespace
+        schema2 = {
+            "meta": {
+                "package": "http://example.com/schema2",
+                "namespaces": {
+                    "ns1": "http://example.com/schema1"
+                }
+            },
+            "types": [
+                ["Employee", "Record", [], "An employee record", [
+                    [1, "person", "ns1:Person", [], "Reference to a person."],
+                    [2, "employee_id", "Integer", [], "The employee ID."]
+                ]]
+            ]
+        }
 
+        # Resolve the schemas
+        resolved_schema = jadn.resolve([schema1, schema2])
+
+        # Assert that the resolved schema contains the merged definitions
+        self.assertIn("Person", [t[0] for t in resolved_schema["types"]])
+        self.assertIn("Employee", [t[0] for t in resolved_schema["types"]])
+
+        # Assert that the namespace reference is resolved correctly
+        employee_type = next(t for t in resolved_schema["types"] if t[0] == "Employee")
+        self.assertEqual(employee_type[4][0][2], "Person")  # The namespace reference should be resolvedclass StripComments(TestCase):
 
 class StripComments(TestCase):
     schema = {
